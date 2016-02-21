@@ -41,6 +41,7 @@ private:
     void initialize_treewidget(); ///TODO: Implement
 
     void prepare_view_data();
+    void load_query_intoMemory(QString command);
 };
 
 #endif // MAINWINDOW_HPP

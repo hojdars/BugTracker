@@ -4,18 +4,17 @@
 Q_DECLARE_METATYPE(int*)
 
 
-MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    // setup UI
+    // Setup UI
     ui->setupUi(this);
     resize(QDesktopWidget().availableGeometry(this).size() * 0.7);
 
-    // connect Signals
+    // Connect Signals
     connect(ui->tree_bugView,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),this,SLOT(signalTry(QTreeWidgetItem*,int)));
 
-    // load prestored DB and connect to it
+    // Load prestored DB and connect to it
     // Load config.ini
     /// ...
 
@@ -26,8 +25,37 @@ MainWindow::MainWindow(QWidget *parent) :
     // Loading non-bug data from DB
     prepare_view_data();
 
-    // initialize the tree via "Data"
+    // Initialize the tree via "Data"
     initialize_treewidget();
+
+    // Load the bugs into memory
+    /// ...
+    load_query_intoMemory("SELECT * FROM lidi");
+
+    // Load the bugs into the tree
+    /// ...
+}
+
+void MainWindow::load_query_intoMemory(QString command)
+{
+    QSqlQuery query;
+    if(query.exec(command))
+    {
+        while(query.next())
+        {
+            bug_data_->bug_values_.push_back(std::vector<QString>());
+            bug_data_->bug_values_.back().push_back(query.value(0).toString());
+            bug_data_->bug_values_.back().push_back(query.value(1).toString());
+            bug_data_->bug_values_.back().push_back(query.value(2).toString());
+            bug_data_->bug_values_.back().push_back(query.value(3).toString());
+            bug_data_->bug_values_.back().push_back(query.value(4).toString());
+            bug_data_->bug_values_.back().push_back(query.value(5).toString());
+        }
+    }
+    else
+    {
+        ui->statusBar->showMessage("Error executing query " + command);
+    }
 }
 
 MainWindow::~MainWindow()
@@ -52,6 +80,7 @@ void MainWindow::on_actionConnect_triggered()
     ui->statusBar->showMessage(datab_inst_->DB_connect());
 }
 
+// NOT USED CURRENTLY AT ALL
 void MainWindow::load_tree_fromDB()
 {
     QSqlQuery qry;
@@ -63,11 +92,14 @@ void MainWindow::load_tree_fromDB()
             item->setText(0,qry.value(0).toString());
             item->setText(1,qry.value(1).toString());
             item->setText(2,qry.value(2).toString());
+            item->setText(3,qry.value(3).toString());
+            item->setText(4,qry.value(4).toString());
+            item->setText(5,qry.value(5).toString());
         }
     }
     else
     {
-        ui->statusBar->showMessage("Error executing querry.");
+        ui->statusBar->showMessage("Error executing query.");
     }
 }
 
@@ -89,7 +121,7 @@ void MainWindow::initialize_treewidget()
     ui->tree_bugView->setHeaderLabels(bug_data_->column_names_);
 
     ui->tree_bugView->clear();
-    load_tree_fromDB();
+    //load_tree_fromDB();
 }
 
 void MainWindow::prepare_view_data()
@@ -105,19 +137,25 @@ void MainWindow::prepare_view_data()
     }
     else
     {
-        ui->statusBar->showMessage("Error executing querry 2.");
+        ui->statusBar->showMessage("Error executing query 2.");
     }
 
 
-    // load state (critical, etc.) into the "Data" object
+    // load state (critical, etc.) into the "Data" object and update the filter check list
+    ui->list_FilterStateChecks->clear();
     if(qry.exec("SELECT * FROM states"))
     {
         bug_data_->state_counts_ = qry.size();
         while(qry.next())
+        {
             bug_data_->state_names_.push_back(qry.value(1).toString());
+            QListWidgetItem * itm = new QListWidgetItem(qry.value(1).toString()); // no memory leaks here?
+            itm->setCheckState(Qt::Unchecked);
+            ui->list_FilterStateChecks->addItem(itm);
+        }
     }
     else
     {
-        ui->statusBar->showMessage("Error executing querry 2.");
+        ui->statusBar->showMessage("Error executing query 2.");
     }
 }

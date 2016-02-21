@@ -15,8 +15,8 @@ public:
 
     DataObject() = default;
 
-    ///Bugs here
-    /// ?
+    std::vector< std::vector<QString> > bug_values_; // is this sufficient?
+    int bug_count_;
 };
 
 #endif // DATAOBJECT_HPP
