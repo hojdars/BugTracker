@@ -1,0 +1,10 @@
+Main todo:
+创创创创创
+
+  TreeWidget  -  OnClick
+    * m靗 by aktualizovat popis vpravo
+
+  TreeWidget  -  OnDoubleClick
+    * m靗 by otevt dialog na 鷓ravu
+
+  Filter nefiltruje
