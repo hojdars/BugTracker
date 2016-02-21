@@ -1,10 +1,36 @@
 Main todo:
-创创创创创
+==========
+
+  Memory representation
+    * The loaded bugs vector<>
+    * The labels of collumns    .. OK
+    * The states
+
+  Loading from DB
+    * load collumn names for treeView
+        * labels below need to change, labels in preview window
+    * load state names (like critical, normal, etc.)
+        * type enum list in filter needs to change
+    * load the bugs correctly - correct things in correct collumns, into memory
 
   TreeWidget  -  OnClick
-    * m靗 by aktualizovat popis vpravo
+    * should update the description on the right
 
   TreeWidget  -  OnDoubleClick
-    * m靗 by otevt dialog na 鷓ravu
+    * should open a dialog to edit the bug
 
-  Filter nefiltruje
+  DB is connecting to the preset, not to the .ini
+
+  Settings do not update .ini file (or load it's data to show before edit!!)
+
+  Filter on the bottom is not filtering
+
+  Concurrent access not solved at all (yet)
+
+  Rewrite "Error executing querry" messages
+
+Garbage:
+========
+
+  MainWindow::SignalTry() is a prototype
+    * to be used with TreeWidget::OnItemDoubleClick

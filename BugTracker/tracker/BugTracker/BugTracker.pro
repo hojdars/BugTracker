@@ -17,11 +17,13 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     dbsetdialog.cpp \
-    dbhandler.cpp
+    dbhandler.cpp \
+    dataobject.cpp
 
 HEADERS  += mainwindow.hpp \
     dbsetdialog.hpp \
-    dbhandler.hpp
+    dbhandler.hpp \
+    dataobject.hpp
 
 FORMS    += mainwindow.ui \
     dbsetdialog.ui
