@@ -2,7 +2,7 @@ Main todo:
 ==========
 
   Memory representation
-    * The loaded bugs vector<>   .. OK-ish
+    * The loaded bugs vector<>   .. OK-ish, refactor
     * The labels of collumns     .. OK
     * The states                 .. OK
 
@@ -12,7 +12,7 @@ Main todo:
     * load state names (like critical, normal, etc.)              .. OK
         * type enum list in filter needs to change                .. OK
     * load the bugs correctly
-        * loaded into memory                                      .. OK
+        * loaded into memory                                      .. OK, load_query_intoMemory() loading six, not col_count_
         * correct things in correct collumns
 
   TreeWidget  -  OnClick
