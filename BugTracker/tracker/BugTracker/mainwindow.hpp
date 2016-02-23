@@ -42,6 +42,7 @@ private:
 
     void initialize_treewidget();
 
+    void load_new_database();
     void prepare_view_data();
     void load_query_intoMemory(QString command);
     void load_tree_fromMemory();

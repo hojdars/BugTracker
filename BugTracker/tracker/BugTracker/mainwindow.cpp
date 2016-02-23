@@ -19,8 +19,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     // Load config.ini
     /// ...
 
-    // Connect to the DB
+    // Make a DB handler
     datab_inst_ = std::make_unique<DBHandler>();
+
+    // Connect to the DB
+    load_new_database();
+}
+
+void MainWindow::load_new_database()
+{
+    // if we are connected, the handler will close the connection
+    datab_inst_->close();
+
+    // Connect to the DB
     ui->statusBar->showMessage(datab_inst_->DB_connect());
 
     // Loading non-bug data from DB
@@ -110,7 +121,7 @@ void MainWindow::on_actionSettings_triggered()
 
 void MainWindow::on_actionConnect_triggered()
 {
-    ui->statusBar->showMessage(datab_inst_->DB_connect());
+    load_new_database();
 }
 
 // Not USED, waiting for onClick

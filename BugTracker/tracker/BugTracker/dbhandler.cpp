@@ -18,6 +18,12 @@ void DBHandler::set_params(QString username, QString  password, QString  hostnam
     port_ = port;
 }
 
+void DBHandler::close()
+{
+    if(database_.isOpen())
+        database_.close();
+}
+
 
 // estabilish a connection to DB
 QString DBHandler::DB_connect()

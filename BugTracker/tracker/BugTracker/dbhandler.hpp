@@ -14,6 +14,7 @@ public:
     void set_params(QString  username, QString  password, QString  hostname,
                     QString  dbname, int port);
     QString DB_connect();
+    void close();
 
 private:
     QString  username_;
