@@ -4,6 +4,7 @@
 #include <QString>
 #include <QStringList>
 #include <vector>
+#include <QDebug>
 
 class DataObject
 {
@@ -17,6 +18,8 @@ public:
 
     std::vector< std::vector<QString> > bug_values_; // is this sufficient?
     int bug_count_;
+
+    void view_data();
 };
 
 #endif // DATAOBJECT_HPP

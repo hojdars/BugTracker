@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 
     // Connect Signals
     connect(ui->tree_bugView,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),this,SLOT(signalTry(QTreeWidgetItem*,int)));
+    connect(ui->tree_bugView,SIGNAL(itemClicked(QTreeWidgetItem*,int)),this,SLOT(tree_itemClicked_signal(QTreeWidgetItem*,int)));
 
     // Load prestored DB and connect to it
     // Load config.ini
@@ -29,11 +30,23 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     initialize_treewidget();
 
     // Load the bugs into memory
-    /// ...
     load_query_intoMemory("SELECT * FROM lidi");
 
     // Load the bugs into the tree
-    /// ...
+    load_tree_fromMemory();
+}
+
+void MainWindow::tree_itemClicked_signal(QTreeWidgetItem *item, int column)
+{
+    int item_position =  item->data(column,0x0100).toInt(); // toInt() returns bool, check if okay
+    QString text;
+    int i = 0;
+    for(auto& field : bug_data_->bug_values_[item_position])
+    {
+        text += "<b>" + bug_data_->column_names_.at(i) + "</b>:" +field + "<br>";
+        i++;
+    }
+    ui->text_bugDesc->setText(text);
 }
 
 void MainWindow::load_query_intoMemory(QString command)
@@ -44,17 +57,37 @@ void MainWindow::load_query_intoMemory(QString command)
         while(query.next())
         {
             bug_data_->bug_values_.push_back(std::vector<QString>());
-            bug_data_->bug_values_.back().push_back(query.value(0).toString());
-            bug_data_->bug_values_.back().push_back(query.value(1).toString());
-            bug_data_->bug_values_.back().push_back(query.value(2).toString());
-            bug_data_->bug_values_.back().push_back(query.value(3).toString());
-            bug_data_->bug_values_.back().push_back(query.value(4).toString());
-            bug_data_->bug_values_.back().push_back(query.value(5).toString());
+            for(int i = 0; i < bug_data_->column_names_.count(); ++i)
+            {
+                bug_data_->bug_values_.back().push_back(query.value(i).toString());
+            }
         }
+
+        // bug_data_->view_data(); // dumps the data in qDebug() << , for debugging reasons
     }
     else
     {
         ui->statusBar->showMessage("Error executing query " + command);
+    }
+}
+
+void MainWindow::load_tree_fromMemory()
+{
+    // For each bug, we create a new tree item and set all it's properties
+    int item_counter = 0;
+    for(auto& mem_item : bug_data_->bug_values_)
+    {
+        // delete not needed, QtTree handles that when we assing him as a parent in the constructor
+        QTreeWidgetItem * item = new QTreeWidgetItem(ui->tree_bugView);
+
+        int col_counter = 0;
+        for(auto& column_string : mem_item)
+        {
+            item->setText(col_counter,column_string);
+            item->setData( col_counter, 0x0100, QVariant::fromValue<int>(item_counter) );
+            col_counter++;
+        }
+        item_counter++;
     }
 }
 
@@ -80,29 +113,7 @@ void MainWindow::on_actionConnect_triggered()
     ui->statusBar->showMessage(datab_inst_->DB_connect());
 }
 
-// NOT USED CURRENTLY AT ALL
-void MainWindow::load_tree_fromDB()
-{
-    QSqlQuery qry;
-    if(qry.exec("SELECT * FROM lidi"))
-    {
-        while(qry.next())
-        {
-            QTreeWidgetItem * item = new QTreeWidgetItem(ui->tree_bugView);
-            item->setText(0,qry.value(0).toString());
-            item->setText(1,qry.value(1).toString());
-            item->setText(2,qry.value(2).toString());
-            item->setText(3,qry.value(3).toString());
-            item->setText(4,qry.value(4).toString());
-            item->setText(5,qry.value(5).toString());
-        }
-    }
-    else
-    {
-        ui->statusBar->showMessage("Error executing query.");
-    }
-}
-
+// Not USED, waiting for onClick
 void MainWindow::signalTry(QTreeWidgetItem *item, int column)
 {
     ui->statusBar->showMessage(item->data(0,0).toString());

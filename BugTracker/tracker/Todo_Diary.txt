@@ -12,10 +12,10 @@ Main todo:
     * load state names (like critical, normal, etc.)              .. OK
         * type enum list in filter needs to change                .. OK
     * load the bugs correctly
-        * loaded into memory                                      .. OK, load_query_intoMemory() loading six, not col_count_
-        * correct things in correct collumns
+        * loaded into memory                                      .. OK
+        * correct things in correct collumns                      .. OK
 
-  TreeWidget  -  OnClick
+  TreeWidget  -  OnClick                               .. Basic but working
     * should update the description on the right
 
   TreeWidget  -  OnDoubleClick

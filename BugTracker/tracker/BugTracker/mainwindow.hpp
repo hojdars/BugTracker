@@ -33,15 +33,19 @@ private slots:
     void on_actionConnect_triggered();
     void signalTry(QTreeWidgetItem *item, int column);
 
+    void tree_itemClicked_signal(QTreeWidgetItem *item, int column);
+
 private:
     std::unique_ptr<DBHandler> datab_inst_;
     std::unique_ptr<DataObject> bug_data_;
     Ui::MainWindow *ui;
 
-    void initialize_treewidget(); ///TODO: Implement
+    void initialize_treewidget();
 
     void prepare_view_data();
     void load_query_intoMemory(QString command);
+    void load_tree_fromMemory();
+
 };
 
 #endif // MAINWINDOW_HPP
