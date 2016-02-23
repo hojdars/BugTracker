@@ -18,12 +18,15 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     dbsetdialog.cpp \
     dbhandler.cpp \
-    dataobject.cpp
+    dataobject.cpp \
+    itemeditdialog.cpp
 
 HEADERS  += mainwindow.hpp \
     dbsetdialog.hpp \
     dbhandler.hpp \
-    dataobject.hpp
+    dataobject.hpp \
+    itemeditdialog.hpp
 
 FORMS    += mainwindow.ui \
-    dbsetdialog.ui
+    dbsetdialog.ui \
+    itemeditdialog.ui

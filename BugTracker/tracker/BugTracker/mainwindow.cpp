@@ -1,9 +1,6 @@
 #include "mainwindow.hpp"
 #include "ui_mainwindow.h"
 
-Q_DECLARE_METATYPE(int*)
-
-
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
@@ -12,7 +9,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     resize(QDesktopWidget().availableGeometry(this).size() * 0.7);
 
     // Connect Signals
-    connect(ui->tree_bugView,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),this,SLOT(signalTry(QTreeWidgetItem*,int)));
+    connect(ui->tree_bugView,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),this,SLOT(tree_itemDoubleClicked_signal(QTreeWidgetItem*,int)));
     connect(ui->tree_bugView,SIGNAL(itemClicked(QTreeWidgetItem*,int)),this,SLOT(tree_itemClicked_signal(QTreeWidgetItem*,int)));
 
     // Load config.ini
@@ -50,6 +47,7 @@ void MainWindow::load_settings(std::vector<QString>& dbparams, int& port)
     dbparams[1] = QString::fromStdString(pass);
     dbparams[2] = QString::fromStdString(host);
     dbparams[3] = QString::fromStdString(db);
+    ifs.close();
 }
 
 void MainWindow::load_new_database()
@@ -86,6 +84,36 @@ void MainWindow::tree_itemClicked_signal(QTreeWidgetItem *item, int column)
     ui->text_bugDesc->setText(text);
 }
 
+// Editing the item
+void MainWindow::tree_itemDoubleClicked_signal(QTreeWidgetItem *item, int column)
+{
+    // LOCK the item
+    /// ...
+
+    // Get data from dialog and update our memory
+    size_t item_position = item->data(column,0x0100).toInt();
+    ItemEditDialog tst(0,bug_data_->bug_values_.at(item_position));
+    tst.exec();
+    if(tst.result() == QDialog::DialogCode::Accepted)
+    {
+        qDebug() << tst.line_edits_ptr_->at(1)->text();
+        for(int i = 0; i < bug_data_->column_names_.size(); ++i)
+        {
+            bug_data_->bug_values_.at(item_position).at(i) = tst.line_edits_ptr_->at(i)->text();
+        }
+    }
+
+    // Update the tree view
+    load_tree_fromMemory();
+
+    // Update database
+    /// ...
+
+    // UNLOCK the item
+    /// ...
+}
+
+
 void MainWindow::load_query_intoMemory(QString command)
 {
     QSqlQuery query;
@@ -110,6 +138,9 @@ void MainWindow::load_query_intoMemory(QString command)
 
 void MainWindow::load_tree_fromMemory()
 {
+    // clears whatever is left
+    ui->tree_bugView->clear();
+
     // For each bug, we create a new tree item and set all it's properties
     int item_counter = 0;
     for(auto& mem_item : bug_data_->bug_values_)
@@ -143,6 +174,14 @@ void MainWindow::on_actionSettings_triggered()
                            dialog.hostname(), dialog.dbname(), dialog.port());
 
     ui->statusBar->showMessage("OK, database set successfully.");
+
+    std::fstream ofs;
+    ofs.open("settings.ini",std::ios::out );
+    ofs << dialog.username().toStdString() << std::endl << dialog.password().toStdString()
+        << std::endl << dialog.hostname().toStdString() << std::endl << dialog.dbname().toStdString()
+        << std::endl << dialog.port();
+
+    ofs.close();
 }
 
 void MainWindow::on_actionConnect_triggered()
@@ -153,14 +192,17 @@ void MainWindow::on_actionConnect_triggered()
 // Not USED, waiting for onClick
 void MainWindow::signalTry(QTreeWidgetItem *item, int column)
 {
-    ui->statusBar->showMessage(item->data(0,0).toString());
+  //  ui->statusBar->showMessage(item->data(0,0).toString());
 
     //std::unique_ptr<int> a = std::make_unique<int>(5);
-     int * a = new int(column);
+    //int * a = new int(column);
 
      // NOTE THE METATYPE DEFINE!
+    // add this metatype definition to header
+//    Q_DECLARE_METATYPE(int*)
 
-    item->setData( 0,0x0100, QVariant::fromValue<int*>(a) );
+    //item->setData( 0,0x0100, QVariant::fromValue<int*>(a) );
+
 }
 
 void MainWindow::initialize_treewidget()

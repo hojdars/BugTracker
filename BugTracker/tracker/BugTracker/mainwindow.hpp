@@ -10,10 +10,12 @@
 #include <QString>
 #include <memory>
 #include <fstream>
+#include <iostream>
 
 #include "dbsetdialog.hpp"
 #include "dbhandler.hpp"
 #include "dataobject.hpp"
+#include "itemeditdialog.hpp"
 
 namespace Ui {
 class MainWindow;
@@ -35,6 +37,7 @@ private slots:
     void signalTry(QTreeWidgetItem *item, int column);
 
     void tree_itemClicked_signal(QTreeWidgetItem *item, int column);
+    void tree_itemDoubleClicked_signal(QTreeWidgetItem *item, int column);
 
 private:
     std::unique_ptr<DBHandler> datab_inst_;
@@ -48,6 +51,7 @@ private:
     void load_query_intoMemory(QString command);
     void load_tree_fromMemory();
     void load_settings(std::vector<QString>& dbparams, int& port);
+
 };
 
 #endif // MAINWINDOW_HPP
