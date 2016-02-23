@@ -96,10 +96,9 @@ void MainWindow::tree_itemDoubleClicked_signal(QTreeWidgetItem *item, int column
     tst.exec();
     if(tst.result() == QDialog::DialogCode::Accepted)
     {
-        qDebug() << tst.line_edits_ptr_->at(1)->text();
-        for(int i = 0; i < bug_data_->column_names_.size(); ++i)
+        for(int i = 1; i < bug_data_->column_names_.size(); ++i)
         {
-            bug_data_->bug_values_.at(item_position).at(i) = tst.line_edits_ptr_->at(i)->text();
+            bug_data_->bug_values_.at(item_position).at(i) = tst.line_edits_ptr_->at(i-1)->text();
         }
     }
 
@@ -107,7 +106,38 @@ void MainWindow::tree_itemDoubleClicked_signal(QTreeWidgetItem *item, int column
     load_tree_fromMemory();
 
     // Update database
-    /// ...
+
+    /* UPDATE lidi
+     * SET col1=val1,...
+     * WHERE ID='nultej item'
+    */
+
+    QString sqlCommand = "UPDATE lidi SET ";
+    QString ID = bug_data_->bug_values_.at(item_position).at(0);
+
+    int i = 0;
+    for(auto& column_name : bug_data_->column_names_)
+    {
+       if(i != 0)
+       {
+           sqlCommand += column_name+"='"+bug_data_->bug_values_.at(item_position).at(i) +"'";
+           if(i > 0 && i != bug_data_->column_names_.size()-1)
+               sqlCommand += ", ";
+       }
+       i++;
+    }
+
+    sqlCommand += " WHERE ID=" + ID;
+
+    QSqlQuery update_querry;
+    if(update_querry.exec(sqlCommand))
+    {
+        ui->statusBar->showMessage("Database updated successfully.");
+    }
+    else
+    {
+        ui->statusBar->showMessage("Error updating item.");
+    }
 
     // UNLOCK the item
     /// ...
@@ -189,21 +219,6 @@ void MainWindow::on_actionConnect_triggered()
     load_new_database();
 }
 
-// Not USED, waiting for onClick
-void MainWindow::signalTry(QTreeWidgetItem *item, int column)
-{
-  //  ui->statusBar->showMessage(item->data(0,0).toString());
-
-    //std::unique_ptr<int> a = std::make_unique<int>(5);
-    //int * a = new int(column);
-
-     // NOTE THE METATYPE DEFINE!
-    // add this metatype definition to header
-//    Q_DECLARE_METATYPE(int*)
-
-    //item->setData( 0,0x0100, QVariant::fromValue<int*>(a) );
-
-}
 
 void MainWindow::initialize_treewidget()
 {

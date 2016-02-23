@@ -9,7 +9,7 @@ ItemEditDialog::ItemEditDialog(QWidget *parent, std::vector<QString> bug_values)
 
     // we make as many line edits as we have columns
     line_edits_ptr_ = std::make_unique<std::vector<QLineEdit*> >();
-    for(size_t i = 0; i < bug_values.size(); i++)
+    for(size_t i = 1; i < bug_values.size(); i++)
     {
         line_edits_ptr_->push_back(new QLineEdit(bug_values[i],this));
     }

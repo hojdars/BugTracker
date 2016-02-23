@@ -9,17 +9,19 @@ Main todo:
     * labels below need to change, **labels in preview window   .. POSTPONED**
 
 
-* ```TreeWidget::OnDoubleClick``` - should open a dialog to edit the bug
-    * **only thing left it updating the DB**
+* ```TreeWidget::OnDoubleClick```
+    * [OK] _should open a dialog to edit the bug in memory_
+    * [OK] _then push the change into DB_
+    * With **locking for concurrent access**
 
 
 * Filter on the bottom is not filtering
 
+* Missing button to Add a new bug
 
 * Recognize enum types when parsing bugs
 
 
-* Concurrent access not solved at all (yet)
 * Maybe split ```load_new_database()``` into two methods ```update()``` and ```new_connect()``` ?
 * Rewrite "Error executing querry" messages
 * Do a table with enums: their column and their value table
@@ -41,8 +43,8 @@ Done
 * [OK] _```TreeWidget::setSortingEnabled()```  -  Sorting on column's name click_
 * [OK] _Settings loading on app launch .. OK_
 * [OK] _Settings do not update .ini file_
+* [OK] ```MainWindow::SignalTry()``` is a prototype to be used with ```TreeWidget::OnItemDoubleClick()```
 
 Garbage:
 ========
-
-  ```MainWindow::SignalTry()``` is a prototype to be used with ```TreeWidget::OnItemDoubleClick()```
+empty!
