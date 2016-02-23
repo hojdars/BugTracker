@@ -4,8 +4,17 @@ DBHandler::DBHandler()
 {
     database_ = QSqlDatabase::addDatabase("QPSQL");
 
-    ///TODO: these should be loaded from .ini
     set_params("postgres","root","localhost","testdb",5432);
+}
+
+DBHandler::DBHandler(std::vector<QString> dbparams ,int port)
+{
+    username_ = dbparams[0];
+    password_ = dbparams[1];
+    hostname_ = dbparams[2];
+    dbname_ = dbparams[3];
+    port_ = port;
+    database_ = QSqlDatabase::addDatabase("QPSQL");
 }
 
 void DBHandler::set_params(QString username, QString  password, QString  hostname,

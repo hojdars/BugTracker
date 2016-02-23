@@ -15,15 +15,41 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     connect(ui->tree_bugView,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),this,SLOT(signalTry(QTreeWidgetItem*,int)));
     connect(ui->tree_bugView,SIGNAL(itemClicked(QTreeWidgetItem*,int)),this,SLOT(tree_itemClicked_signal(QTreeWidgetItem*,int)));
 
-    // Load prestored DB and connect to it
     // Load config.ini
-    /// ...
+    int port_setting = 5432;
+    std::vector<QString> db_settings(4,0); // we need 4 items in the vector
+    load_settings(db_settings,port_setting);
 
     // Make a DB handler
-    datab_inst_ = std::make_unique<DBHandler>();
+    datab_inst_ = std::make_unique<DBHandler>(db_settings, port_setting);
 
     // Connect to the DB
     load_new_database();
+}
+
+void MainWindow::load_settings(std::vector<QString>& dbparams, int& port)
+{
+    dbparams[0] = "postgres";
+    dbparams[1] = "root";
+    dbparams[2] = "localhost";
+    dbparams[3] = "testdb";
+    port = 5432;
+
+    std::ifstream ifs;
+    ifs.open("settings.ini");
+    if(!ifs.is_open())
+    {
+        QMessageBox msg;
+        msg.setText("Settings not found, using default.\nPlease set them in the 'Settings' menu.");
+        msg.exec();
+        return;
+    }
+    std::string name,pass,host,db;
+    ifs >> name >>  pass >>  host >> db >> port;
+    dbparams[0] = QString::fromStdString(name);
+    dbparams[1] = QString::fromStdString(pass);
+    dbparams[2] = QString::fromStdString(host);
+    dbparams[3] = QString::fromStdString(db);
 }
 
 void MainWindow::load_new_database()

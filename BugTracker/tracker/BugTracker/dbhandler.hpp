@@ -2,14 +2,19 @@
 #define DBHANDLER_HPP
 
 #include <string>
-#include <QString>
+#include <vector>
 #include <fstream>
+
+#include <QString>
 #include <QtSql>
 
 class DBHandler
 {
 public:
     DBHandler();
+
+    DBHandler(std::vector<QString> dbparams ,int port);
+
     bool is_open(){ return database_.isOpen(); }
     void set_params(QString  username, QString  password, QString  hostname,
                     QString  dbname, int port);
@@ -18,8 +23,8 @@ public:
 
 private:
     QString  username_;
-    QString  hostname_;
     QString  password_;
+    QString  hostname_;
     QString  dbname_;
     int port_;
     QSqlDatabase database_;

@@ -9,6 +9,7 @@
 #include <QtSql>
 #include <QString>
 #include <memory>
+#include <fstream>
 
 #include "dbsetdialog.hpp"
 #include "dbhandler.hpp"
@@ -46,7 +47,7 @@ private:
     void prepare_view_data();
     void load_query_intoMemory(QString command);
     void load_tree_fromMemory();
-
+    void load_settings(std::vector<QString>& dbparams, int& port);
 };
 
 #endif // MAINWINDOW_HPP
