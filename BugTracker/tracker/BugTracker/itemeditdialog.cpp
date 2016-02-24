@@ -21,6 +21,17 @@ ItemEditDialog::ItemEditDialog(QWidget *parent, std::vector<QString> bug_values)
 
 }
 
+QStringList ItemEditDialog::return_strings()
+{
+    QStringList ret;
+    for(auto it : *line_edits_ptr_)
+    {
+        ret.push_back(it->text());
+    }
+
+    return ret;
+}
+
 ItemEditDialog::~ItemEditDialog()
 {
     delete ui;

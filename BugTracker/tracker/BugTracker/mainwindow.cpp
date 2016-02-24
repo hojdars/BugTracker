@@ -84,6 +84,77 @@ void MainWindow::tree_itemClicked_signal(QTreeWidgetItem *item, int column)
     ui->text_bugDesc->setText(text);
 }
 
+void MainWindow::edit_memoryItem(int item_position)
+{
+    // if we are editing out of range, we don't edit
+    if(item_position >= bug_data_->bug_values_.size())
+    {
+        QMessageBox msg;
+        msg.setText("The item you are trying to edit doesn't exist. This edit isn't possible.");
+        msg.exec();
+        return;
+    }
+
+    ItemEditDialog edit_dialog(0,bug_data_->bug_values_.at(item_position));
+    edit_dialog.exec();
+    if(edit_dialog.result() == QDialog::DialogCode::Accepted)
+    {
+        QStringList result = edit_dialog.return_strings();
+        for(int i = 1; i < bug_data_->column_names_.size(); ++i)
+        {
+            bug_data_->bug_values_.at(item_position).at(i) = result.at(i-1);
+        }
+    }
+}
+
+void MainWindow::add_edit_newItem()
+{
+    /// INITIalize with column names instead of "Edit"
+    ItemEditDialog edit_dialog(0,std::vector<QString>(bug_data_->column_names_.size(),"Edit"));
+    edit_dialog.exec();
+    QStringList values = edit_dialog.return_strings();
+
+    // INSERT command with 'values'
+    QString sql_command = "INSERT INTO lidi (";
+    for(auto& col_name : bug_data_->column_names_)
+    {
+
+        if( col_name != bug_data_->column_names_.first())
+        {
+            sql_command += col_name;
+            if(col_name != bug_data_->column_names_.last())
+                sql_command += + ", ";
+        }
+    }
+    sql_command += ") VALUES (";
+    for(auto& val_name : values)
+    {
+        sql_command += "'" + val_name + "'";
+        if(val_name != values.last()) // HACK
+            sql_command += ", ";
+    }
+    sql_command += ");";
+
+    // load querry into memory SELECT 'the new one'
+    QSqlQuery query;
+
+    // INSERT
+    if(query.exec(sql_command))
+    {
+        ui->statusBar->showMessage("Insert successful.");
+    }
+    else
+    {
+        ui->statusBar->showMessage("Error executing query 2.");
+    }
+
+    // SELECT new
+    load_query_intoMemory("SELECT * FROM lidi WHERE id=(SELECT max(id) FROM lidi )");
+
+    // update tree view from memory
+    load_tree_fromMemory();
+}
+
 // Editing the item
 void MainWindow::tree_itemDoubleClicked_signal(QTreeWidgetItem *item, int column)
 {
@@ -92,15 +163,7 @@ void MainWindow::tree_itemDoubleClicked_signal(QTreeWidgetItem *item, int column
 
     // Get data from dialog and update our memory
     size_t item_position = item->data(column,0x0100).toInt();
-    ItemEditDialog tst(0,bug_data_->bug_values_.at(item_position));
-    tst.exec();
-    if(tst.result() == QDialog::DialogCode::Accepted)
-    {
-        for(int i = 1; i < bug_data_->column_names_.size(); ++i)
-        {
-            bug_data_->bug_values_.at(item_position).at(i) = tst.line_edits_ptr_->at(i-1)->text();
-        }
-    }
+    edit_memoryItem(item_position);
 
     // Update the tree view
     load_tree_fromMemory();
@@ -131,13 +194,9 @@ void MainWindow::tree_itemDoubleClicked_signal(QTreeWidgetItem *item, int column
 
     QSqlQuery update_querry;
     if(update_querry.exec(sqlCommand))
-    {
         ui->statusBar->showMessage("Database updated successfully.");
-    }
     else
-    {
         ui->statusBar->showMessage("Error updating item.");
-    }
 
     // UNLOCK the item
     /// ...
@@ -263,4 +322,9 @@ void MainWindow::prepare_view_data()
     {
         ui->statusBar->showMessage("Error executing query 2.");
     }
+}
+
+void MainWindow::on_actionAdd_new_bug_triggered()
+{
+    add_edit_newItem();
 }

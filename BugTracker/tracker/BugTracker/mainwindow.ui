@@ -385,13 +385,14 @@ p, li { white-space: pre-wrap; }
      <string>Connection</string>
     </property>
     <addaction name="actionConnect"/>
+    <addaction name="actionSettings"/>
    </widget>
    <widget class="QMenu" name="menuOptions">
     <property name="title">
-     <string>Options</string>
+     <string>Bug</string>
     </property>
     <addaction name="separator"/>
-    <addaction name="actionSettings"/>
+    <addaction name="actionAdd_new_bug"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuOptions"/>
@@ -407,12 +408,17 @@ p, li { white-space: pre-wrap; }
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionConnect">
    <property name="text">
-    <string>Connect</string>
+    <string>Connect to database</string>
    </property>
   </action>
   <action name="actionSettings">
    <property name="text">
-    <string>Settings</string>
+    <string>Database connection settings</string>
+   </property>
+  </action>
+  <action name="actionAdd_new_bug">
+   <property name="text">
+    <string>Add new bug</string>
    </property>
   </action>
  </widget>

@@ -20,6 +20,7 @@ public:
     explicit ItemEditDialog(QWidget *parent = 0, std::vector<QString> bug_values = std::vector<QString>());
     ~ItemEditDialog();
     std::unique_ptr< std::vector<QLineEdit*> > line_edits_ptr_;
+    QStringList return_strings();
 
 private:
     Ui::ItemEditDialog *ui;

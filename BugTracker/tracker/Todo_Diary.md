@@ -14,13 +14,13 @@ Main todo:
     * [OK] _then push the change into DB_
     * With **locking for concurrent access**
 
+* Make a execute SQL querry function with echoing into status bar
+
+* ```load_query_into_memory``` **adds** instead of rewrting which is good but I should be calling ```load_new_memory``` on start
 
 * Filter on the bottom is not filtering
 
-* Missing button to Add a new bug
-
 * Recognize enum types when parsing bugs
-
 
 * Maybe split ```load_new_database()``` into two methods ```update()``` and ```new_connect()``` ?
 * Rewrite "Error executing querry" messages
@@ -44,6 +44,8 @@ Done
 * [OK] _Settings loading on app launch .. OK_
 * [OK] _Settings do not update .ini file_
 * [OK] ```MainWindow::SignalTry()``` is a prototype to be used with ```TreeWidget::OnItemDoubleClick()```
+* [OK] _Add a "Add New Bug" button_
+
 
 Garbage:
 ========
