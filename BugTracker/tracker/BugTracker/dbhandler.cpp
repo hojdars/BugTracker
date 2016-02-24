@@ -33,6 +33,10 @@ void DBHandler::close()
         database_.close();
 }
 
+QString DBHandler::last_error()
+{
+    return database_.lastError().text();
+}
 
 // estabilish a connection to DB
 QString DBHandler::DB_connect()

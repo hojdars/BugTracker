@@ -14,17 +14,24 @@ Main todo:
     * [OK] _then push the change into DB_
     * With **locking for concurrent access**
 
-* Make a execute SQL querry function with echoing into status bar
 
-* ```load_query_into_memory``` **adds** instead of rewrting which is good but I should be calling ```load_new_memory``` on start
+* Solve all ```query failed``` cases
+    * if update query fails, the item seems updated but is not
+    * if column / state query fails the columns are not loaded
+
+
+* Fix tree sorting? I need type sorting for all the columns...
+
 
 * Filter on the bottom is not filtering
 
+
 * Recognize enum types when parsing bugs
+    * Do a table with enums: their column and their value table
+
 
 * Maybe split ```load_new_database()``` into two methods ```update()``` and ```new_connect()``` ?
-* Rewrite "Error executing querry" messages
-* Do a table with enums: their column and their value table
+
 * Memory leak in lineEdits on EditItemDialog maybe?
 
 Done
@@ -45,6 +52,10 @@ Done
 * [OK] _Settings do not update .ini file_
 * [OK] ```MainWindow::SignalTry()``` is a prototype to be used with ```TreeWidget::OnItemDoubleClick()```
 * [OK] _Add a "Add New Bug" button_
+* [OK] _```load_query_into_memory``` **adds** instead of rewrting which is good but I should be calling ```load_new_memory``` on start_
+    * solved by: ```load_new_database()``` does this, load_query_into_memory only adds bugs
+* [OK] _Rewrite "Error executing querry" messages_
+
 
 
 Garbage:

@@ -50,6 +50,7 @@ void MainWindow::load_settings(std::vector<QString>& dbparams, int& port)
     ifs.close();
 }
 
+
 void MainWindow::load_new_database()
 {
     // if we are connected, the handler will close the connection
@@ -57,6 +58,9 @@ void MainWindow::load_new_database()
 
     // Connect to the DB
     ui->statusBar->showMessage(datab_inst_->DB_connect());
+
+    // Make new data object - resets the memory
+    bug_data_ = std::make_unique<DataObject>();
 
     // Loading non-bug data from DB
     prepare_view_data();
@@ -107,6 +111,7 @@ void MainWindow::edit_memoryItem(int item_position)
     }
 }
 
+// This needs serial primary key in the database!
 void MainWindow::add_edit_newItem()
 {
     /// INITIalize with column names instead of "Edit"
@@ -140,12 +145,11 @@ void MainWindow::add_edit_newItem()
 
     // INSERT
     if(query.exec(sql_command))
-    {
         ui->statusBar->showMessage("Insert successful.");
-    }
     else
     {
-        ui->statusBar->showMessage("Error executing query 2.");
+        ui->statusBar->showMessage("Inserting failed. " + datab_inst_->last_error());
+        return;
     }
 
     // SELECT new
@@ -196,7 +200,7 @@ void MainWindow::tree_itemDoubleClicked_signal(QTreeWidgetItem *item, int column
     if(update_querry.exec(sqlCommand))
         ui->statusBar->showMessage("Database updated successfully.");
     else
-        ui->statusBar->showMessage("Error updating item.");
+        ui->statusBar->showMessage("Error updating item. " + datab_inst_->last_error() );
 
     // UNLOCK the item
     /// ...
@@ -221,7 +225,7 @@ void MainWindow::load_query_intoMemory(QString command)
     }
     else
     {
-        ui->statusBar->showMessage("Error executing query " + command);
+        ui->statusBar->showMessage("Error executing query: " + datab_inst_->last_error());
     }
 }
 
@@ -253,7 +257,6 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-/// TODO: This sould also update settings.ini
 void MainWindow::on_actionSettings_triggered()
 {
     DBSetDialog dialog(this);
@@ -281,17 +284,13 @@ void MainWindow::on_actionConnect_triggered()
 
 void MainWindow::initialize_treewidget()
 {
+    ui->tree_bugView->clear();
     ui->tree_bugView->setColumnCount(bug_data_->column_names_.size());
     ui->tree_bugView->setHeaderLabels(bug_data_->column_names_);
-
-    ui->tree_bugView->clear();
-    //load_tree_fromDB();
 }
 
 void MainWindow::prepare_view_data()
 {
-    bug_data_ = std::make_unique<DataObject>();
-
     // load collumn names into the "Data" object
     QSqlQuery qry;
     if(qry.exec("SELECT * FROM cols"))
@@ -301,7 +300,7 @@ void MainWindow::prepare_view_data()
     }
     else
     {
-        ui->statusBar->showMessage("Error executing query 2.");
+        ui->statusBar->showMessage("Error loading column names. " + datab_inst_->last_error());
     }
 
 
@@ -320,7 +319,7 @@ void MainWindow::prepare_view_data()
     }
     else
     {
-        ui->statusBar->showMessage("Error executing query 2.");
+        ui->statusBar->showMessage("Error loading state names. " + datab_inst_->last_error());
     }
 }
 
