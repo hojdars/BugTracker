@@ -11,6 +11,7 @@
 #include <memory>
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 
 #include "dbsetdialog.hpp"
 #include "dbhandler.hpp"
@@ -29,8 +30,6 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    void load_tree_fromDB();
-
 private slots:
     void on_actionSettings_triggered();
     void on_actionConnect_triggered();
@@ -39,6 +38,10 @@ private slots:
     void tree_itemDoubleClicked_signal(QTreeWidgetItem *item, int column);
 
     void on_actionAdd_new_bug_triggered();
+
+    void on_button_resetCriteria_clicked();
+
+    void on_buton_filterBugs_clicked();
 
 private:
     std::unique_ptr<DBHandler> datab_inst_;

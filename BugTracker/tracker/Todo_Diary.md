@@ -4,9 +4,21 @@ Main todo:
 ##### Memory representation
 * The loaded bugs vector<>   .. **OK-ish, refactor**
 
-##### Loading from DB
-* load collumn names for treeView
-    * labels below need to change, **labels in preview window   .. POSTPONED**
+##### Important stuff:
+
+* Recognize enum types when parsing bugs
+    * Do a table with enums: their column and their value table
+
+
+* Filter is not modular
+    * column names are hard coded
+    * line edits are hard coded
+    * the field names are hard coded
+
+
+* Solve all ```query failed``` cases
+    * if update query fails, the item seems updated but is not
+    * if column / state query fails the columns are not loaded
 
 
 * ```TreeWidget::OnDoubleClick```
@@ -15,19 +27,12 @@ Main todo:
     * With **locking for concurrent access**
 
 
-* Solve all ```query failed``` cases
-    * if update query fails, the item seems updated but is not
-    * if column / state query fails the columns are not loaded
-
+##### Minor stuff:
 
 * Fix tree sorting? I need type sorting for all the columns...
 
 
-* Filter on the bottom is not filtering
-
-
-* Recognize enum types when parsing bugs
-    * Do a table with enums: their column and their value table
+* Abusing signals to do slot's job
 
 
 * Maybe split ```load_new_database()``` into two methods ```update()``` and ```new_connect()``` ?
@@ -55,7 +60,7 @@ Done
 * [OK] _```load_query_into_memory``` **adds** instead of rewrting which is good but I should be calling ```load_new_memory``` on start_
     * solved by: ```load_new_database()``` does this, load_query_into_memory only adds bugs
 * [OK] _Rewrite "Error executing querry" messages_
-
+* [OK] _Filter on the bottom is not filtering_
 
 
 Garbage:

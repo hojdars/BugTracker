@@ -314,6 +314,7 @@ void MainWindow::prepare_view_data()
             bug_data_->state_names_.push_back(qry.value(1).toString());
             QListWidgetItem * itm = new QListWidgetItem(qry.value(1).toString()); // no memory leaks here?
             itm->setCheckState(Qt::Unchecked);
+            itm->setData(0x0100,qry.value(0));
             ui->list_FilterStateChecks->addItem(itm);
         }
     }
@@ -326,4 +327,68 @@ void MainWindow::prepare_view_data()
 void MainWindow::on_actionAdd_new_bug_triggered()
 {
     add_edit_newItem();
+}
+
+void MainWindow::on_button_resetCriteria_clicked()
+{
+    ui->edit_Filter1->setText("");
+    ui->edit_Filter2->setText("");
+    ui->edit_Filter3->setText("");
+    ui->edit_Filter4->setText("");
+
+    for(int i = 0; i < ui->list_FilterStateChecks->count(); ++i)
+        ui->list_FilterStateChecks->item(i)->setCheckState(Qt::CheckState::Unchecked);
+
+}
+
+void MainWindow::on_buton_filterBugs_clicked()
+{
+
+    QString sql_command = "SELECT * FROM lidi WHERE";
+    QStringList list;
+
+    if(ui->edit_Filter1->text() != "")
+        list.push_back( QString(" position(") +  "'" + ui->edit_Filter1->text() + "'"  + " in name) > 0");
+
+    if(ui->edit_Filter2->text() != "")
+        list.push_back( QString(" position(") +  "'" + ui->edit_Filter2->text() + "'"  + " in description) > 0");
+
+    if(ui->edit_Filter3->text() != "")
+        list.push_back( QString(" position(") +  "'" + ui->edit_Filter3->text() + "'"  + " in author) > 0");
+
+    if(ui->edit_Filter4->text() != "")
+        list.push_back( QString(" id=")  + ui->edit_Filter4->text());
+
+    QStringList or_list;
+    for(int i = 0; i < ui->list_FilterStateChecks->count(); ++i)
+    {
+        if(ui->list_FilterStateChecks->item(i)->checkState() == Qt::CheckState::Checked)
+            or_list.push_back(QString(" importance='") + QString::number(ui->list_FilterStateChecks->item(i)->data(0x0100).toInt()) +"'");
+    }
+
+    for(int i = 0; i < list.size(); ++i)
+    {
+        if(i != 0)
+            sql_command += " AND";
+        sql_command += list[i];
+    }
+
+    if(list.size() != 0)
+        sql_command += " AND ";
+    sql_command+=" (";
+
+    for(int i = 0; i < or_list.size(); ++i)
+    {
+        if(i != 0)
+            sql_command += " OR";
+        sql_command += or_list[i];
+    }
+    sql_command += ")";
+
+
+    qDebug() << sql_command;
+
+    bug_data_->bug_values_.clear();
+    load_query_intoMemory(sql_command);
+    load_tree_fromMemory();
 }
