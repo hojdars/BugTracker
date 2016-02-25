@@ -111,15 +111,8 @@ void MainWindow::edit_memoryItem(int item_position)
     }
 }
 
-// This needs serial primary key in the database!
-void MainWindow::add_edit_newItem()
+QString MainWindow::sqlInsert_fromValues(QStringList values)
 {
-    /// INITIalize with column names instead of "Edit"
-    ItemEditDialog edit_dialog(0,std::vector<QString>(bug_data_->column_names_.size(),"Edit"));
-    edit_dialog.exec();
-    QStringList values = edit_dialog.return_strings();
-
-    // INSERT command with 'values'
     QString sql_command = "INSERT INTO lidi (";
     for(auto& col_name : bug_data_->column_names_)
     {
@@ -139,6 +132,25 @@ void MainWindow::add_edit_newItem()
             sql_command += ", ";
     }
     sql_command += ");";
+    return sql_command;
+}
+
+// This needs serial primary key in the database!
+void MainWindow::add_edit_newItem()
+{
+    // Load up column names as initial values for the dialog
+    std::vector<QString> initial_textvalues;
+    for(auto& it : bug_data_->column_names_)
+    {
+        initial_textvalues.push_back(it);
+    }
+
+    ItemEditDialog edit_dialog(0,initial_textvalues);
+    edit_dialog.exec();
+    QStringList values = edit_dialog.return_strings();
+
+    // INSERT command with 'values'
+    QString sql_command = sqlInsert_fromValues(values);
 
     // load querry into memory SELECT 'the new one'
     QSqlQuery query;

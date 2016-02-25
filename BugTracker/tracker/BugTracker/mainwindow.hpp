@@ -57,7 +57,7 @@ private:
     void load_settings(std::vector<QString>& dbparams, int& port);
     void edit_memoryItem(int item_position);
     void add_edit_newItem();
-
+    QString sqlInsert_fromValues(QStringList values);
 };
 
 #endif // MAINWINDOW_HPP

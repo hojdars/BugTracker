@@ -6,6 +6,8 @@ Main todo:
 
 ##### Important stuff:
 
+* Refactor filter code, kinda tilt mode
+
 * Recognize enum types when parsing bugs
     * Do a table with enums: their column and their value table
 
