@@ -56,6 +56,9 @@ void MainWindow::load_new_database()
     // if we are connected, the handler will close the connection
     datab_inst_->close();
 
+    // We clear the tree
+    ui->tree_bugView->clear();
+
     // Connect to the DB
     ui->statusBar->showMessage(datab_inst_->DB_connect());
 
@@ -63,7 +66,9 @@ void MainWindow::load_new_database()
     bug_data_ = std::make_unique<DataObject>();
 
     // Loading non-bug data from DB
-    prepare_view_data();
+    // if it fails, the method notifies user and we can end
+    if(!prepare_view_data())
+        return;
 
     // Initialize the tree via "Data"
     initialize_treewidget();
@@ -88,7 +93,7 @@ void MainWindow::tree_itemClicked_signal(QTreeWidgetItem *item, int column)
     ui->text_bugDesc->setText(text);
 }
 
-void MainWindow::edit_memoryItem(int item_position)
+std::vector<QString> MainWindow::edit_memoryItem(int item_position)
 {
     // if we are editing out of range, we don't edit
     if(item_position >= bug_data_->bug_values_.size())
@@ -96,8 +101,10 @@ void MainWindow::edit_memoryItem(int item_position)
         QMessageBox msg;
         msg.setText("The item you are trying to edit doesn't exist. This edit isn't possible.");
         msg.exec();
-        return;
+        return std::vector<QString>();
     }
+
+    std::vector<QString> backup = bug_data_->bug_values_.at(item_position);
 
     ItemEditDialog edit_dialog(0,bug_data_->bug_values_.at(item_position));
     edit_dialog.exec();
@@ -109,6 +116,7 @@ void MainWindow::edit_memoryItem(int item_position)
             bug_data_->bug_values_.at(item_position).at(i) = result.at(i-1);
         }
     }
+    return backup;
 }
 
 QString MainWindow::sqlInsert_fromValues(QStringList values)
@@ -160,7 +168,7 @@ void MainWindow::add_edit_newItem()
         ui->statusBar->showMessage("Insert successful.");
     else
     {
-        ui->statusBar->showMessage("Inserting failed. " + datab_inst_->last_error());
+        ui->statusBar->showMessage("Inserting failed.\n" + query.lastError().text());
         return;
     }
 
@@ -179,17 +187,16 @@ void MainWindow::tree_itemDoubleClicked_signal(QTreeWidgetItem *item, int column
 
     // Get data from dialog and update our memory
     size_t item_position = item->data(column,0x0100).toInt();
-    edit_memoryItem(item_position);
+    std::vector<QString> backup = edit_memoryItem(item_position);
+
+    if(backup.size() == 0) // the item is out of range, user has been notified, we end
+        return;
 
     // Update the tree view
     load_tree_fromMemory();
 
     // Update database
-
-    /* UPDATE lidi
-     * SET col1=val1,...
-     * WHERE ID='nultej item'
-    */
+    //  UPDATE lidi SET col1=val1,... WHERE ID='itemid'
 
     QString sqlCommand = "UPDATE lidi SET ";
     QString ID = bug_data_->bug_values_.at(item_position).at(0);
@@ -212,7 +219,10 @@ void MainWindow::tree_itemDoubleClicked_signal(QTreeWidgetItem *item, int column
     if(update_querry.exec(sqlCommand))
         ui->statusBar->showMessage("Database updated successfully.");
     else
-        ui->statusBar->showMessage("Error updating item. " + datab_inst_->last_error() );
+    {
+        ui->statusBar->showMessage("Error updating item.\n" + update_querry.lastError().text() );
+        bug_data_->bug_values_.at(item_position) = backup;
+    }
 
     // UNLOCK the item
     /// ...
@@ -237,7 +247,7 @@ void MainWindow::load_query_intoMemory(QString command)
     }
     else
     {
-        ui->statusBar->showMessage("Error executing query: " + datab_inst_->last_error());
+        ui->statusBar->showMessage("Error executing query:\n" + query.lastError().text());
     }
 }
 
@@ -301,8 +311,9 @@ void MainWindow::initialize_treewidget()
     ui->tree_bugView->setHeaderLabels(bug_data_->column_names_);
 }
 
-void MainWindow::prepare_view_data()
+bool MainWindow::prepare_view_data()
 {
+    bool success = true;
     // load collumn names into the "Data" object
     QSqlQuery qry;
     if(qry.exec("SELECT * FROM cols"))
@@ -312,7 +323,10 @@ void MainWindow::prepare_view_data()
     }
     else
     {
-        ui->statusBar->showMessage("Error loading column names. " + datab_inst_->last_error());
+        success = false;
+        QMessageBox msg;
+        msg.setText("Error loading column names.\n" + qry.lastError().text() );
+        msg.exec();
     }
 
 
@@ -332,8 +346,12 @@ void MainWindow::prepare_view_data()
     }
     else
     {
-        ui->statusBar->showMessage("Error loading state names. " + datab_inst_->last_error());
+        success = false;
+        QMessageBox msg;
+        msg.setText("Error loading state names.\n" + qry.lastError().text());
+        msg.exec();
     }
+    return success;
 }
 
 void MainWindow::on_actionAdd_new_bug_triggered()
@@ -396,9 +414,6 @@ void MainWindow::on_buton_filterBugs_clicked()
         sql_command += or_list[i];
     }
     sql_command += ")";
-
-
-    qDebug() << sql_command;
 
     bug_data_->bug_values_.clear();
     load_query_intoMemory(sql_command);

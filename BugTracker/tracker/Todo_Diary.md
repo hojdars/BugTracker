@@ -19,7 +19,7 @@ Main todo:
 
 
 * Solve all ```query failed``` cases
-    * if update query fails, the item seems updated but is not
+    * [OK] _if update query fails, the item seems updated but is not_
     * if column / state query fails the columns are not loaded
 
 

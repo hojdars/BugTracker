@@ -51,11 +51,11 @@ private:
     void initialize_treewidget();
 
     void load_new_database();
-    void prepare_view_data();
+    bool prepare_view_data();
     void load_query_intoMemory(QString command);
     void load_tree_fromMemory();
     void load_settings(std::vector<QString>& dbparams, int& port);
-    void edit_memoryItem(int item_position);
+    std::vector<QString> edit_memoryItem(int item_position);
     void add_edit_newItem();
     QString sqlInsert_fromValues(QStringList values);
 };
