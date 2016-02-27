@@ -14,16 +14,22 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 
     // Load config.ini
     int port_setting = 5432;
-    std::vector<QString> db_settings(4,0); // we need 4 items in the vector
+    std::vector<QString> db_settings(4,0); // we need 4 items in the vector - username, password, database name, host name
     load_settings(db_settings,port_setting);
 
     // Make a DB handler
     datab_inst_ = std::make_unique<DBHandler>(db_settings, port_setting);
 
-    // Connect to the DB
+    // Connect to the DB and do everything associated with it - erasing memory, loading new bugs, updating the TreeWidget
     load_new_database();
 }
 
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+
+// Loading settings
 void MainWindow::load_settings(std::vector<QString>& dbparams, int& port)
 {
     dbparams[0] = "postgres";
@@ -50,7 +56,7 @@ void MainWindow::load_settings(std::vector<QString>& dbparams, int& port)
     ifs.close();
 }
 
-
+// Loading new database
 void MainWindow::load_new_database()
 {
     // if we are connected, the handler will close the connection
@@ -66,7 +72,7 @@ void MainWindow::load_new_database()
     bug_data_ = std::make_unique<DataObject>();
 
     // Loading non-bug data from DB
-    // if it fails, the method notifies user and we can end
+    // if it fails, the method notifies the user and we can end
     if(!prepare_view_data())
         return;
 
@@ -80,45 +86,162 @@ void MainWindow::load_new_database()
     load_tree_fromMemory();
 }
 
-void MainWindow::tree_itemClicked_signal(QTreeWidgetItem *item, int column)
+// Loading DB metadata
+bool MainWindow::prepare_view_data()
+{
+    bool success = true;
+
+    // load collumn names into the "Data" object
+    QSqlQuery qry;
+    if(qry.exec("SELECT * FROM cols"))
+    {
+        while(qry.next())
+            bug_data_->column_names_.push_back(qry.value(1).toString());
+    }
+    else
+    {
+        success = false;
+        QMessageBox msg;
+        msg.setText("Error loading column names.\n" + qry.lastError().text() );
+        msg.exec();
+    }
+
+
+    // load state (critical, etc.) into the "Data" object and update the filter check list
+    ui->list_FilterStateChecks->clear();
+    if(qry.exec("SELECT * FROM states"))
+    {
+        bug_data_->state_counts_ = qry.size();
+        while(qry.next())
+        {
+            bug_data_->state_names_.push_back(qry.value(1).toString());
+            QListWidgetItem * itm = new QListWidgetItem(qry.value(1).toString()); // no memory leaks here?
+            itm->setCheckState(Qt::Unchecked);
+            itm->setData(0x0100,qry.value(0));
+            ui->list_FilterStateChecks->addItem(itm);
+        }
+    }
+    else
+    {
+        success = false;
+        QMessageBox msg;
+        msg.setText("Error loading state names.\n" + qry.lastError().text());
+        msg.exec();
+    }
+    return success;
+}
+
+// Clearing the TreeWidget
+void MainWindow::initialize_treewidget()
+{
+    ui->tree_bugView->clear();
+    ui->tree_bugView->setColumnCount(bug_data_->column_names_.size());
+    ui->tree_bugView->setHeaderLabels(bug_data_->column_names_);
+}
+
+// Loading bugs into memory, adding up, not erasing beforehand!
+void MainWindow::load_query_intoMemory(QString command)
+{
+    QSqlQuery query;
+    if(query.exec(command))
+    {
+        while(query.next())
+        {
+            bug_data_->bug_values_.push_back(std::vector<QString>());
+            for(int i = 0; i < bug_data_->column_names_.count(); ++i)
+            {
+                bug_data_->bug_values_.back().push_back(query.value(i).toString());
+            }
+        }
+
+        // bug_data_->view_data(); // dumps the data in qDebug() << , for debugging reasons
+    }
+    else
+    {
+        ui->statusBar->showMessage("Error executing query:\n" + query.lastError().text());
+    }
+}
+
+// Loading our memory-stored bugs into the TreeView
+void MainWindow::load_tree_fromMemory()
+{
+    // clears whatever is left
+    ui->tree_bugView->clear();
+
+    // For each bug, we create a new tree item and set all it's properties
+    int item_counter = 0;
+    for(auto& mem_item : bug_data_->bug_values_)
+    {
+        // delete not needed, QtTree handles that when we assing him as a parent in the constructor
+        QTreeWidgetItem * item = new QTreeWidgetItem(ui->tree_bugView);
+
+        int col_counter = 0;
+        for(auto& column_string : mem_item)
+        {
+            // for enum type columns
+            if(col_counter == 4)
+                item->setText(col_counter,bug_data_->state_names_[ column_string.toInt() - 1]);
+            else
+                item->setText(col_counter,column_string);
+
+            item->setData( col_counter, 0x0100, QVariant::fromValue<int>(item_counter) );
+            col_counter++;
+        }
+        item_counter++;
+    }
+}
+
+
+/* -- Menu items -- */
+
+void MainWindow::on_actionAdd_new_bug_triggered()
+{
+    add_edit_newItem();
+}
+void MainWindow::on_actionSettings_triggered()
+{
+    // Runs a dialog to update the DB settings
+    DBSetDialog dialog(this);
+    dialog.exec();
+
+    // Updates the DB parameters.
+    datab_inst_->set_params(dialog.username(), dialog.password(),
+                           dialog.hostname(), dialog.dbname(), dialog.port());
+
+    ui->statusBar->showMessage("OK, database set successfully.");
+
+    // Writes it to 'settings.ini' file
+    std::fstream ofs;
+    ofs.open("settings.ini",std::ios::out );
+    ofs << dialog.username().toStdString() << std::endl << dialog.password().toStdString()
+        << std::endl << dialog.hostname().toStdString() << std::endl << dialog.dbname().toStdString()
+        << std::endl << dialog.port();
+
+    ofs.close();
+}
+void MainWindow::on_actionConnect_triggered()
+{
+    load_new_database();
+}
+
+/* -- Event handling methods -- */
+
+// Updating item view on right side when item is clicked
+void MainWindow::tree_itemClicked_slot(QTreeWidgetItem *item, int column)
 {
     int item_position =  item->data(column,0x0100).toInt(); // toInt() returns bool, check if okay
     QString text;
     int i = 0;
     for(auto& field : bug_data_->bug_values_[item_position])
     {
-        text += "<b>" + bug_data_->column_names_.at(i) + "</b>:" +field + "<br>";
+        text += "<b>" + bug_data_->column_names_.at(i) + "</b>:<br>" +field + "<br><br>";
         i++;
     }
     ui->text_bugDesc->setText(text);
 }
 
-std::vector<QString> MainWindow::edit_memoryItem(int item_position)
-{
-    // if we are editing out of range, we don't edit
-    if(item_position >= bug_data_->bug_values_.size())
-    {
-        QMessageBox msg;
-        msg.setText("The item you are trying to edit doesn't exist. This edit isn't possible.");
-        msg.exec();
-        return std::vector<QString>();
-    }
-
-    std::vector<QString> backup = bug_data_->bug_values_.at(item_position);
-
-    ItemEditDialog edit_dialog(0,bug_data_->bug_values_.at(item_position));
-    edit_dialog.exec();
-    if(edit_dialog.result() == QDialog::DialogCode::Accepted)
-    {
-        QStringList result = edit_dialog.return_strings();
-        for(int i = 1; i < bug_data_->column_names_.size(); ++i)
-        {
-            bug_data_->bug_values_.at(item_position).at(i) = result.at(i-1);
-        }
-    }
-    return backup;
-}
-
+// Adding new item
+// This needs 'serial' primary key in the database!
 QString MainWindow::sqlInsert_fromValues(QStringList values)
 {
     QString sql_command = "INSERT INTO lidi (";
@@ -142,8 +265,6 @@ QString MainWindow::sqlInsert_fromValues(QStringList values)
     sql_command += ");";
     return sql_command;
 }
-
-// This needs serial primary key in the database!
 void MainWindow::add_edit_newItem()
 {
     // Load up column names as initial values for the dialog
@@ -183,8 +304,33 @@ void MainWindow::add_edit_newItem()
     load_tree_fromMemory();
 }
 
-// Editing the item
-void MainWindow::tree_itemDoubleClicked_signal(QTreeWidgetItem *item, int column)
+// Editing an existing item via double clicking
+std::vector<QString> MainWindow::edit_memoryItem(int item_position)
+{
+    // if we are editing out of range, we don't edit
+    if(item_position >= bug_data_->bug_values_.size())
+    {
+        QMessageBox msg;
+        msg.setText("The item you are trying to edit doesn't exist. This edit isn't possible.");
+        msg.exec();
+        return std::vector<QString>();
+    }
+
+    std::vector<QString> backup = bug_data_->bug_values_.at(item_position);
+
+    ItemEditDialog edit_dialog(0,bug_data_->bug_values_.at(item_position));
+    edit_dialog.exec();
+    if(edit_dialog.result() == QDialog::DialogCode::Accepted)
+    {
+        QStringList result = edit_dialog.return_strings();
+        for(int i = 1; i < bug_data_->column_names_.size(); ++i)
+        {
+            bug_data_->bug_values_.at(item_position).at(i) = result.at(i-1);
+        }
+    }
+    return backup;
+}
+void MainWindow::tree_itemDoubleClicked_slot(QTreeWidgetItem *item, int column)
 {
     size_t item_position = item->data(column,0x0100).toInt();
     QString ID = bug_data_->bug_values_.at(item_position).at(0);
@@ -253,145 +399,13 @@ void MainWindow::tree_itemDoubleClicked_signal(QTreeWidgetItem *item, int column
     {
         ui->statusBar->showMessage("Error updating item.\n" + update_querry.lastError().text() );
         bug_data_->bug_values_.at(item_position) = backup;
+        lock_transaction.exec("COMMIT;");
     }
 }
 
+/* -- Filters -- */
 
-void MainWindow::load_query_intoMemory(QString command)
-{
-    QSqlQuery query;
-    if(query.exec(command))
-    {
-        while(query.next())
-        {
-            bug_data_->bug_values_.push_back(std::vector<QString>());
-            for(int i = 0; i < bug_data_->column_names_.count(); ++i)
-            {
-                bug_data_->bug_values_.back().push_back(query.value(i).toString());
-            }
-        }
-
-        // bug_data_->view_data(); // dumps the data in qDebug() << , for debugging reasons
-    }
-    else
-    {
-        ui->statusBar->showMessage("Error executing query:\n" + query.lastError().text());
-    }
-}
-
-void MainWindow::load_tree_fromMemory()
-{
-    // clears whatever is left
-    ui->tree_bugView->clear();
-
-    // For each bug, we create a new tree item and set all it's properties
-    int item_counter = 0;
-    for(auto& mem_item : bug_data_->bug_values_)
-    {
-        // delete not needed, QtTree handles that when we assing him as a parent in the constructor
-        QTreeWidgetItem * item = new QTreeWidgetItem(ui->tree_bugView);
-
-        int col_counter = 0;
-        for(auto& column_string : mem_item)
-        {
-            // for enum type columns
-            if(col_counter == 4)
-                item->setText(col_counter,bug_data_->state_names_[ column_string.toInt() - 1]);
-            else
-                item->setText(col_counter,column_string);
-
-            item->setData( col_counter, 0x0100, QVariant::fromValue<int>(item_counter) );
-            col_counter++;
-        }
-        item_counter++;
-    }
-}
-
-MainWindow::~MainWindow()
-{
-    delete ui;
-}
-
-void MainWindow::on_actionSettings_triggered()
-{
-    DBSetDialog dialog(this);
-    dialog.exec();
-
-    datab_inst_->set_params(dialog.username(), dialog.password(),
-                           dialog.hostname(), dialog.dbname(), dialog.port());
-
-    ui->statusBar->showMessage("OK, database set successfully.");
-
-    std::fstream ofs;
-    ofs.open("settings.ini",std::ios::out );
-    ofs << dialog.username().toStdString() << std::endl << dialog.password().toStdString()
-        << std::endl << dialog.hostname().toStdString() << std::endl << dialog.dbname().toStdString()
-        << std::endl << dialog.port();
-
-    ofs.close();
-}
-
-void MainWindow::on_actionConnect_triggered()
-{
-    load_new_database();
-}
-
-
-void MainWindow::initialize_treewidget()
-{
-    ui->tree_bugView->clear();
-    ui->tree_bugView->setColumnCount(bug_data_->column_names_.size());
-    ui->tree_bugView->setHeaderLabels(bug_data_->column_names_);
-}
-
-bool MainWindow::prepare_view_data()
-{
-    bool success = true;
-    // load collumn names into the "Data" object
-    QSqlQuery qry;
-    if(qry.exec("SELECT * FROM cols"))
-    {
-        while(qry.next())
-            bug_data_->column_names_.push_back(qry.value(1).toString());
-    }
-    else
-    {
-        success = false;
-        QMessageBox msg;
-        msg.setText("Error loading column names.\n" + qry.lastError().text() );
-        msg.exec();
-    }
-
-
-    // load state (critical, etc.) into the "Data" object and update the filter check list
-    ui->list_FilterStateChecks->clear();
-    if(qry.exec("SELECT * FROM states"))
-    {
-        bug_data_->state_counts_ = qry.size();
-        while(qry.next())
-        {
-            bug_data_->state_names_.push_back(qry.value(1).toString());
-            QListWidgetItem * itm = new QListWidgetItem(qry.value(1).toString()); // no memory leaks here?
-            itm->setCheckState(Qt::Unchecked);
-            itm->setData(0x0100,qry.value(0));
-            ui->list_FilterStateChecks->addItem(itm);
-        }
-    }
-    else
-    {
-        success = false;
-        QMessageBox msg;
-        msg.setText("Error loading state names.\n" + qry.lastError().text());
-        msg.exec();
-    }
-    return success;
-}
-
-void MainWindow::on_actionAdd_new_bug_triggered()
-{
-    add_edit_newItem();
-}
-
+// Reseting all the items in the filter
 void MainWindow::on_button_resetCriteria_clicked()
 {
     ui->edit_Filter1->setText("");
@@ -403,6 +417,7 @@ void MainWindow::on_button_resetCriteria_clicked()
         ui->list_FilterStateChecks->item(i)->setCheckState(Qt::CheckState::Checked);
 }
 
+// Requesting only bugs that satisfy the criteria
 void MainWindow::on_buton_filterBugs_clicked()
 {
 

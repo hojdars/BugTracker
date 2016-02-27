@@ -3,34 +3,13 @@ Main todo:
 
 ##### Important stuff:
 
-
-* Recognize enum types when parsing bugs
-    * Do a table with enums: their column and their value table
-
-
 * all table names are hard coded
-
-
-* Editing item requires enum numbers and not strings
-
-
-* Filter is not modular
-    * column names are hard coded
-    * line edits are hard coded
-    * the field names are hard coded
 
 
 ##### Minor stuff:
 
-* Fix tree sorting? I need type sorting for all the columns...
-
-
 * Abusing signals to do slot's job
 
-
-* Maybe split ```load_new_database()``` into two methods ```update()``` and ```new_connect()``` ?
-
-* Memory leak in lineEdits on EditItemDialog maybe?
 
 Done
 ====
@@ -64,6 +43,13 @@ Done
     * [OK] _With locking for concurrent access_
 
 
-Garbage:
+Improvements:
 ========
-empty!
+* Fix tree sorting? I need type sorting for all the columns...
+* Filter is not modular
+    * column names are hard coded
+    * line edits are hard coded
+    * the field names are hard coded
+* Recognize enum types when parsing bugs
+    * Do a table with enums: their column and their value table
+* Editing item requires enum numbers and not strings

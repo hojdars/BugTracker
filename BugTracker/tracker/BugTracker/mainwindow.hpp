@@ -34,8 +34,8 @@ private slots:
     void on_actionSettings_triggered();
     void on_actionConnect_triggered();
 
-    void tree_itemClicked_signal(QTreeWidgetItem *item, int column);
-    void tree_itemDoubleClicked_signal(QTreeWidgetItem *item, int column);
+    void tree_itemClicked_slot(QTreeWidgetItem *item, int column);
+    void tree_itemDoubleClicked_slot(QTreeWidgetItem *item, int column);
 
     void on_actionAdd_new_bug_triggered();
 

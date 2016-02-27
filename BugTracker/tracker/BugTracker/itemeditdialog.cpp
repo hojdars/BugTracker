@@ -14,6 +14,7 @@ ItemEditDialog::ItemEditDialog(QWidget *parent, std::vector<QString> bug_values)
         line_edits_ptr_->push_back(new QLineEdit(bug_values[i],this));
     }
 
+    // Then add them into the GUI
     for(auto it : *line_edits_ptr_)
     {
         ui->lay_Main->addWidget(it);
