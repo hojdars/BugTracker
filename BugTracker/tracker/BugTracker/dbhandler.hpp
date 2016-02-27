@@ -23,10 +23,10 @@ public:
     void close();
 
 private:
-    QString  username_;
-    QString  password_;
-    QString  hostname_;
-    QString  dbname_;
+    QString username_;
+    QString password_;
+    QString hostname_;
+    QString dbname_;
     int port_;
     QSqlDatabase database_;
 };

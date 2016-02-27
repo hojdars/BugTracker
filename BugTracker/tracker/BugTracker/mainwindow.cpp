@@ -155,6 +155,10 @@ void MainWindow::add_edit_newItem()
 
     ItemEditDialog edit_dialog(0,initial_textvalues);
     edit_dialog.exec();
+
+    if(edit_dialog.result() != QDialog::DialogCode::Accepted)
+        return;
+
     QStringList values = edit_dialog.return_strings();
 
     // INSERT command with 'values'
@@ -182,11 +186,39 @@ void MainWindow::add_edit_newItem()
 // Editing the item
 void MainWindow::tree_itemDoubleClicked_signal(QTreeWidgetItem *item, int column)
 {
+    size_t item_position = item->data(column,0x0100).toInt();
+    QString ID = bug_data_->bug_values_.at(item_position).at(0);
+
     // LOCK the item
-    /// ...
+    QSqlQuery lock_transaction;
+    if(lock_transaction.exec("BEGIN; SELECT * FROM lidi WHERE id=" + ID + " FOR UPDATE NOWAIT"))
+        ui->statusBar->showMessage("Row locked successfully.");
+    else
+    {
+        QMessageBox msg;
+        msg.setText("Row is locked, please wait a few moments until someone else unlocks it.\n" + lock_transaction.lastError().text() );
+        msg.exec();
+        lock_transaction.exec("COMMIT;"); // end transaction
+        return;
+    }
+
+    // Compare the memory data to the DB data, if it is not the same, we are overwriting someone else's data
+    while(lock_transaction.next())
+    {
+        for(int i = 0; i < bug_data_->column_names_.size(); ++i)
+        {
+            if(lock_transaction.value(i).toString() != bug_data_->bug_values_.at(item_position).at(i))
+            {
+                QMessageBox msg;
+                msg.setText("This row has been changed by someone else since you last connected to the database. \n Please, reload your database before making changes.");
+                msg.exec();
+                lock_transaction.exec("COMMIT;"); // end transaction
+                return;
+            }
+        }
+    }
 
     // Get data from dialog and update our memory
-    size_t item_position = item->data(column,0x0100).toInt();
     std::vector<QString> backup = edit_memoryItem(item_position);
 
     if(backup.size() == 0) // the item is out of range, user has been notified, we end
@@ -199,7 +231,6 @@ void MainWindow::tree_itemDoubleClicked_signal(QTreeWidgetItem *item, int column
     //  UPDATE lidi SET col1=val1,... WHERE ID='itemid'
 
     QString sqlCommand = "UPDATE lidi SET ";
-    QString ID = bug_data_->bug_values_.at(item_position).at(0);
 
     int i = 0;
     for(auto& column_name : bug_data_->column_names_)
@@ -216,16 +247,13 @@ void MainWindow::tree_itemDoubleClicked_signal(QTreeWidgetItem *item, int column
     sqlCommand += " WHERE ID=" + ID;
 
     QSqlQuery update_querry;
-    if(update_querry.exec(sqlCommand))
+    if(update_querry.exec(sqlCommand + "; COMMIT;"))
         ui->statusBar->showMessage("Database updated successfully.");
     else
     {
         ui->statusBar->showMessage("Error updating item.\n" + update_querry.lastError().text() );
         bug_data_->bug_values_.at(item_position) = backup;
     }
-
-    // UNLOCK the item
-    /// ...
 }
 
 
@@ -266,7 +294,12 @@ void MainWindow::load_tree_fromMemory()
         int col_counter = 0;
         for(auto& column_string : mem_item)
         {
-            item->setText(col_counter,column_string);
+            // for enum type columns
+            if(col_counter == 4)
+                item->setText(col_counter,bug_data_->state_names_[ column_string.toInt() - 1]);
+            else
+                item->setText(col_counter,column_string);
+
             item->setData( col_counter, 0x0100, QVariant::fromValue<int>(item_counter) );
             col_counter++;
         }
@@ -367,7 +400,7 @@ void MainWindow::on_button_resetCriteria_clicked()
     ui->edit_Filter4->setText("");
 
     for(int i = 0; i < ui->list_FilterStateChecks->count(); ++i)
-        ui->list_FilterStateChecks->item(i)->setCheckState(Qt::CheckState::Unchecked);
+        ui->list_FilterStateChecks->item(i)->setCheckState(Qt::CheckState::Checked);
 }
 
 void MainWindow::on_buton_filterBugs_clicked()
