@@ -5,6 +5,7 @@ Main todo:
 
 * all table names are hard coded
 
+* enum column number is hard coded
 
 ##### Minor stuff:
 
