@@ -368,54 +368,64 @@ void MainWindow::on_button_resetCriteria_clicked()
 
     for(int i = 0; i < ui->list_FilterStateChecks->count(); ++i)
         ui->list_FilterStateChecks->item(i)->setCheckState(Qt::CheckState::Unchecked);
-
 }
 
 void MainWindow::on_buton_filterBugs_clicked()
 {
 
     QString sql_command = "SELECT * FROM lidi WHERE";
-    QStringList list;
+    QStringList list_lineEdit;
 
+    // We load all lineEdit filters
     if(ui->edit_Filter1->text() != "")
-        list.push_back( QString(" position(") +  "'" + ui->edit_Filter1->text() + "'"  + " in name) > 0");
+        list_lineEdit.push_back( QString(" position(") +  "'" + ui->edit_Filter1->text() + "'"  + " in name) > 0");
 
     if(ui->edit_Filter2->text() != "")
-        list.push_back( QString(" position(") +  "'" + ui->edit_Filter2->text() + "'"  + " in description) > 0");
+        list_lineEdit.push_back( QString(" position(") +  "'" + ui->edit_Filter2->text() + "'"  + " in description) > 0");
 
     if(ui->edit_Filter3->text() != "")
-        list.push_back( QString(" position(") +  "'" + ui->edit_Filter3->text() + "'"  + " in author) > 0");
+        list_lineEdit.push_back( QString(" position(") +  "'" + ui->edit_Filter3->text() + "'"  + " in author) > 0");
 
     if(ui->edit_Filter4->text() != "")
-        list.push_back( QString(" id=")  + ui->edit_Filter4->text());
+        list_lineEdit.push_back( QString(" id=")  + ui->edit_Filter4->text());
 
-    QStringList or_list;
+    // We load all checked categories
+    QStringList list_checkBox;
     for(int i = 0; i < ui->list_FilterStateChecks->count(); ++i)
     {
         if(ui->list_FilterStateChecks->item(i)->checkState() == Qt::CheckState::Checked)
-            or_list.push_back(QString(" importance='") + QString::number(ui->list_FilterStateChecks->item(i)->data(0x0100).toInt()) +"'");
+            list_checkBox.push_back(QString(" importance='") + QString::number(ui->list_FilterStateChecks->item(i)->data(0x0100).toInt()) +"'");
     }
 
-    for(int i = 0; i < list.size(); ++i)
+    // we chain all the LineEdit requirements together with 'AND'
+    for(int i = 0; i < list_lineEdit.size(); ++i)
     {
         if(i != 0)
             sql_command += " AND";
-        sql_command += list[i];
+        sql_command += list_lineEdit[i];
     }
 
-    if(list.size() != 0)
-        sql_command += " AND ";
-    sql_command+=" (";
-
-    for(int i = 0; i < or_list.size(); ++i)
+    // If we have any, we add a list of checked categories of the bug, with 'OR'
+    // This defaults the behavior to "if nothing is checked, everything is"
+    if(list_checkBox.size() > 0)
     {
-        if(i != 0)
-            sql_command += " OR";
-        sql_command += or_list[i];
-    }
-    sql_command += ")";
+        if(list_lineEdit.size() != 0)
+            sql_command += " AND ";
+        sql_command+=" (";
 
+        for(int i = 0; i < list_checkBox.size(); ++i)
+        {
+            if(i != 0)
+                sql_command += " OR";
+            sql_command += list_checkBox[i];
+        }
+        sql_command += ")";
+    }
+
+    // we delete all bugs from memory, database remains the same, so we do not change column names and such
     bug_data_->bug_values_.clear();
+
+    // we load selected bugs and update the tree view
     load_query_intoMemory(sql_command);
     load_tree_fromMemory();
 }
