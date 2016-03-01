@@ -3,8 +3,6 @@ Main todo:
 
 ##### Important stuff:
 
-* all table names are hard coded
-
 * enum column number is hard coded
 
 ##### Minor stuff:
@@ -42,7 +40,8 @@ Done
     * [OK] _should open a dialog to edit the bug in memory_
     * [OK] _then push the change into DB_
     * [OK] _With locking for concurrent access_
-
+* [OK] _refresh button_
+* [OK] _all table names are hard coded_
 
 Improvements:
 ========

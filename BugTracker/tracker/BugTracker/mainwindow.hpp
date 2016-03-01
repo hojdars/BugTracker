@@ -43,6 +43,8 @@ private slots:
 
     void on_buton_filterBugs_clicked();
 
+    void on_actionRefresh_bugs_triggered();
+
 private:
     std::unique_ptr<DBHandler> datab_inst_;
     std::unique_ptr<DataObject> bug_data_;
@@ -54,7 +56,7 @@ private:
     bool prepare_view_data();
     void load_query_intoMemory(QString command);
     void load_tree_fromMemory();
-    void load_settings(std::vector<QString>& dbparams, int& port);
+    void load_settings(std::vector<QString>& dbparams, int& port, std::vector<QString>& tables);
     std::vector<QString> edit_memoryItem(int item_position);
     void add_edit_newItem();
     QString sqlInsert_fromValues(QStringList values);

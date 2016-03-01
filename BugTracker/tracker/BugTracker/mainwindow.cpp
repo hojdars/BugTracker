@@ -9,16 +9,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     resize(QDesktopWidget().availableGeometry(this).size() * 0.7);
 
     // Connect Signals
-    connect(ui->tree_bugView,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),this,SLOT(tree_itemDoubleClicked_signal(QTreeWidgetItem*,int)));
-    connect(ui->tree_bugView,SIGNAL(itemClicked(QTreeWidgetItem*,int)),this,SLOT(tree_itemClicked_signal(QTreeWidgetItem*,int)));
+    connect(ui->tree_bugView,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),this,SLOT(tree_itemDoubleClicked_slot(QTreeWidgetItem*,int)));
+    connect(ui->tree_bugView,SIGNAL(itemClicked(QTreeWidgetItem*,int)),this,SLOT(tree_itemClicked_slot(QTreeWidgetItem*,int)));
 
     // Load config.ini
     int port_setting = 5432;
     std::vector<QString> db_settings(4,0); // we need 4 items in the vector - username, password, database name, host name
-    load_settings(db_settings,port_setting);
+    std::vector<QString> tables; // we dont know how many tables there are
+    load_settings(db_settings,port_setting, tables);
 
     // Make a DB handler
-    datab_inst_ = std::make_unique<DBHandler>(db_settings, port_setting);
+    datab_inst_ = std::make_unique<DBHandler>(db_settings, port_setting, tables);
 
     // Connect to the DB and do everything associated with it - erasing memory, loading new bugs, updating the TreeWidget
     load_new_database();
@@ -30,7 +31,7 @@ MainWindow::~MainWindow()
 }
 
 // Loading settings
-void MainWindow::load_settings(std::vector<QString>& dbparams, int& port)
+void MainWindow::load_settings(std::vector<QString>& dbparams, int& port, std::vector<QString>& tables)
 {
     dbparams[0] = "postgres";
     dbparams[1] = "root";
@@ -54,6 +55,10 @@ void MainWindow::load_settings(std::vector<QString>& dbparams, int& port)
     dbparams[2] = QString::fromStdString(host);
     dbparams[3] = QString::fromStdString(db);
     ifs.close();
+
+    tables.push_back("lidi");
+    tables.push_back("states");
+    tables.push_back("cols");
 }
 
 // Loading new database
@@ -80,7 +85,7 @@ void MainWindow::load_new_database()
     initialize_treewidget();
 
     // Load the bugs into memory
-    load_query_intoMemory("SELECT * FROM lidi");
+    load_query_intoMemory("SELECT * FROM " + datab_inst_->table_names.at(0));
 
     // Load the bugs into the tree
     load_tree_fromMemory();
@@ -93,7 +98,7 @@ bool MainWindow::prepare_view_data()
 
     // load collumn names into the "Data" object
     QSqlQuery qry;
-    if(qry.exec("SELECT * FROM cols"))
+    if(qry.exec("SELECT * FROM " + datab_inst_->table_names.at(2)))
     {
         while(qry.next())
             bug_data_->column_names_.push_back(qry.value(1).toString());
@@ -109,14 +114,14 @@ bool MainWindow::prepare_view_data()
 
     // load state (critical, etc.) into the "Data" object and update the filter check list
     ui->list_FilterStateChecks->clear();
-    if(qry.exec("SELECT * FROM states"))
+    if(qry.exec("SELECT * FROM " + datab_inst_->table_names.at(1)))
     {
         bug_data_->state_counts_ = qry.size();
         while(qry.next())
         {
             bug_data_->state_names_.push_back(qry.value(1).toString());
             QListWidgetItem * itm = new QListWidgetItem(qry.value(1).toString()); // no memory leaks here?
-            itm->setCheckState(Qt::Unchecked);
+            itm->setCheckState(Qt::Checked);
             itm->setData(0x0100,qry.value(0));
             ui->list_FilterStateChecks->addItem(itm);
         }
@@ -223,6 +228,10 @@ void MainWindow::on_actionConnect_triggered()
 {
     load_new_database();
 }
+void MainWindow::on_actionRefresh_bugs_triggered()
+{
+    load_new_database();
+}
 
 /* -- Event handling methods -- */
 
@@ -244,7 +253,7 @@ void MainWindow::tree_itemClicked_slot(QTreeWidgetItem *item, int column)
 // This needs 'serial' primary key in the database!
 QString MainWindow::sqlInsert_fromValues(QStringList values)
 {
-    QString sql_command = "INSERT INTO lidi (";
+    QString sql_command = "INSERT INTO " + datab_inst_->table_names.at(0) + " (";
     for(auto& col_name : bug_data_->column_names_)
     {
 
@@ -298,7 +307,7 @@ void MainWindow::add_edit_newItem()
     }
 
     // SELECT new
-    load_query_intoMemory("SELECT * FROM lidi WHERE id=(SELECT max(id) FROM lidi )");
+    load_query_intoMemory("SELECT * FROM "+ datab_inst_->table_names.at(0) +" WHERE id=(SELECT max(id) FROM "+ datab_inst_->table_names.at(0) +" )");
 
     // update tree view from memory
     load_tree_fromMemory();
@@ -337,7 +346,7 @@ void MainWindow::tree_itemDoubleClicked_slot(QTreeWidgetItem *item, int column)
 
     // LOCK the item
     QSqlQuery lock_transaction;
-    if(lock_transaction.exec("BEGIN; SELECT * FROM lidi WHERE id=" + ID + " FOR UPDATE NOWAIT"))
+    if(lock_transaction.exec("BEGIN; SELECT * FROM " + datab_inst_->table_names.at(0) +" WHERE id=" + ID + " FOR UPDATE NOWAIT"))
         ui->statusBar->showMessage("Row locked successfully.");
     else
     {
@@ -374,9 +383,9 @@ void MainWindow::tree_itemDoubleClicked_slot(QTreeWidgetItem *item, int column)
     load_tree_fromMemory();
 
     // Update database
-    //  UPDATE lidi SET col1=val1,... WHERE ID='itemid'
+    //  UPDATE 'main table' SET col1=val1,... WHERE ID='itemid'
 
-    QString sqlCommand = "UPDATE lidi SET ";
+    QString sqlCommand = "UPDATE "+ datab_inst_->table_names.at(0) +" SET ";
 
     int i = 0;
     for(auto& column_name : bug_data_->column_names_)
@@ -421,7 +430,7 @@ void MainWindow::on_button_resetCriteria_clicked()
 void MainWindow::on_buton_filterBugs_clicked()
 {
 
-    QString sql_command = "SELECT * FROM lidi WHERE";
+    QString sql_command = "SELECT * FROM "+ datab_inst_->table_names.at(0) +" WHERE";
     QStringList list_lineEdit;
 
     // We load all lineEdit filters
@@ -477,3 +486,5 @@ void MainWindow::on_buton_filterBugs_clicked()
     load_query_intoMemory(sql_command);
     load_tree_fromMemory();
 }
+
+

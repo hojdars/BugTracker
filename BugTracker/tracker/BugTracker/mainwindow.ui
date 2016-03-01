@@ -389,10 +389,11 @@ p, li { white-space: pre-wrap; }
    </widget>
    <widget class="QMenu" name="menuOptions">
     <property name="title">
-     <string>Bug</string>
+     <string>Bugs</string>
     </property>
     <addaction name="separator"/>
     <addaction name="actionAdd_new_bug"/>
+    <addaction name="actionRefresh_bugs"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuOptions"/>
@@ -419,6 +420,11 @@ p, li { white-space: pre-wrap; }
   <action name="actionAdd_new_bug">
    <property name="text">
     <string>Add new bug</string>
+   </property>
+  </action>
+  <action name="actionRefresh_bugs">
+   <property name="text">
+    <string>Refresh bugs</string>
    </property>
   </action>
  </widget>
