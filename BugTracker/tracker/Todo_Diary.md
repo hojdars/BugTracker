@@ -3,7 +3,15 @@ Main todo:
 
 ##### Important stuff:
 
-* enum column number is hard coded
+* enum columns have to be set the true value in set dialog (e.g. 1 = important)
+    * possible fix is making a map with string-to-number and when closing the dialog convert the text to numbers and return numbers. probably via the ```QStringList return_strings()``` method
+
+
+* enum number is hard coded in ```load_tree_fromMemory()```
+
+
+* enum columns are not interchangable, only one column is the one
+
 
 ##### Minor stuff:
 
@@ -50,6 +58,4 @@ Improvements:
     * column names are hard coded
     * line edits are hard coded
     * the field names are hard coded
-* Recognize enum types when parsing bugs
-    * Do a table with enums: their column and their value table
-* Editing item requires enum numbers and not strings
+* Better enums!

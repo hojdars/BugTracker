@@ -56,9 +56,20 @@ void MainWindow::load_settings(std::vector<QString>& dbparams, int& port, std::v
     dbparams[3] = QString::fromStdString(db);
     ifs.close();
 
-    tables.push_back("lidi");
-    tables.push_back("states");
-    tables.push_back("cols");
+
+    ifs.open("tables.ini");
+    if(!ifs.is_open())
+    {
+        QMessageBox msg;
+        msg.setText("Table names not found, using default.\nPlease create a 'tables.ini' file with table names in it.");
+        msg.exec();
+        return;
+    }
+    std::string text_in;
+    while(ifs >> text_in)
+        tables.push_back(QString::fromStdString(text_in));
+
+    ifs.close();
 }
 
 // Loading new database
@@ -119,7 +130,11 @@ bool MainWindow::prepare_view_data()
         bug_data_->state_counts_ = qry.size();
         while(qry.next())
         {
-            bug_data_->state_names_.push_back(qry.value(1).toString());
+            bug_data_->state_names_.insert({qry.value(0).toInt(),
+                                     qry.value(1).toString() });
+
+            bug_data_->rev_state_names_.insert({ qry.value(1).toString().toStdString() , qry.value(0).toInt()});
+
             QListWidgetItem * itm = new QListWidgetItem(qry.value(1).toString()); // no memory leaks here?
             itm->setCheckState(Qt::Checked);
             itm->setData(0x0100,qry.value(0));
@@ -185,7 +200,8 @@ void MainWindow::load_tree_fromMemory()
         {
             // for enum type columns
             if(col_counter == 4)
-                item->setText(col_counter,bug_data_->state_names_[ column_string.toInt() - 1]);
+                item->setText(col_counter, bug_data_->state_names_[column_string.toInt()]);
+                //item->setText(col_counter,bug_data_->state_names_[ column_string.toInt() - 1]);
             else
                 item->setText(col_counter,column_string);
 
@@ -243,7 +259,11 @@ void MainWindow::tree_itemClicked_slot(QTreeWidgetItem *item, int column)
     int i = 0;
     for(auto& field : bug_data_->bug_values_[item_position])
     {
-        text += "<b>" + bug_data_->column_names_.at(i) + "</b>:<br>" +field + "<br><br>";
+        if(i != 4)
+            text += "<b>" + bug_data_->column_names_.at(i) + "</b>:<br>" +field + "<br><br>";
+        else
+            text += "<b>" + bug_data_->column_names_.at(i) + "</b>:<br>" +bug_data_->state_names_.at(field.toInt()) + "<br><br>";
+
         i++;
     }
     ui->text_bugDesc->setText(text);
@@ -326,12 +346,29 @@ std::vector<QString> MainWindow::edit_memoryItem(int item_position)
     }
 
     std::vector<QString> backup = bug_data_->bug_values_.at(item_position);
+    std::vector<QString> dialog_parameter(bug_data_->bug_values_.at(item_position).size());
+    for(size_t i = 0; i < dialog_parameter.size(); i++)
+    {
+        // enumarators problems
+        if(i == 4)
+            dialog_parameter[i] = bug_data_->state_names_[bug_data_->bug_values_.at(item_position).at(i).toInt()];
+        else
+            dialog_parameter[i] = bug_data_->bug_values_.at(item_position).at(i);
+    }
 
-    ItemEditDialog edit_dialog(0,bug_data_->bug_values_.at(item_position));
+    //ItemEditDialog edit_dialog(0,bug_data_->bug_values_.at(item_position));
+    ItemEditDialog edit_dialog(0,dialog_parameter);
+
     edit_dialog.exec();
     if(edit_dialog.result() == QDialog::DialogCode::Accepted)
     {
         QStringList result = edit_dialog.return_strings();
+
+        // enumerators problems
+        auto fin = bug_data_->rev_state_names_.find(result[3].toStdString());
+        if(fin != bug_data_->rev_state_names_.end())
+            result[3] = QString::number(bug_data_->rev_state_names_.at(result[3].toStdString()));
+
         for(int i = 1; i < bug_data_->column_names_.size(); ++i)
         {
             bug_data_->bug_values_.at(item_position).at(i) = result.at(i-1);
@@ -373,8 +410,10 @@ void MainWindow::tree_itemDoubleClicked_slot(QTreeWidgetItem *item, int column)
         }
     }
 
+    qDebug() << "here";
     // Get data from dialog and update our memory
     std::vector<QString> backup = edit_memoryItem(item_position);
+    qDebug() << "here";
 
     if(backup.size() == 0) // the item is out of range, user has been notified, we end
         return;
