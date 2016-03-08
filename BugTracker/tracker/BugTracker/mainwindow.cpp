@@ -33,6 +33,7 @@ MainWindow::~MainWindow()
 // Loading settings
 void MainWindow::load_settings(std::vector<QString>& dbparams, int& port, std::vector<QString>& tables)
 {
+    // load connection settings from 'settings.ini'
     dbparams[0] = "postgres";
     dbparams[1] = "root";
     dbparams[2] = "localhost";
@@ -56,7 +57,7 @@ void MainWindow::load_settings(std::vector<QString>& dbparams, int& port, std::v
     dbparams[3] = QString::fromStdString(db);
     ifs.close();
 
-
+    // load table settings from 'tables.ini'
     ifs.open("tables.ini");
     if(!ifs.is_open())
     {
@@ -127,7 +128,6 @@ bool MainWindow::prepare_view_data()
     ui->list_FilterStateChecks->clear();
     if(qry.exec("SELECT * FROM " + datab_inst_->table_names.at(1)))
     {
-        bug_data_->state_counts_ = qry.size();
         while(qry.next())
         {
             bug_data_->state_names_.insert({qry.value(0).toInt(),
@@ -167,6 +167,7 @@ void MainWindow::load_query_intoMemory(QString command)
     {
         while(query.next())
         {
+            // careful here, push_back() into the original!
             bug_data_->bug_values_.push_back(std::vector<QString>());
             for(int i = 0; i < bug_data_->column_names_.count(); ++i)
             {
@@ -201,7 +202,6 @@ void MainWindow::load_tree_fromMemory()
             // for enum type columns
             if(col_counter == 4)
                 item->setText(col_counter, bug_data_->state_names_[column_string.toInt()]);
-                //item->setText(col_counter,bug_data_->state_names_[ column_string.toInt() - 1]);
             else
                 item->setText(col_counter,column_string);
 
@@ -257,6 +257,8 @@ void MainWindow::tree_itemClicked_slot(QTreeWidgetItem *item, int column)
     int item_position =  item->data(column,0x0100).toInt(); // toInt() returns bool, check if okay
     QString text;
     int i = 0;
+
+    // roughly formates with HTML and shows text in description box
     for(auto& field : bug_data_->bug_values_[item_position])
     {
         if(i != 4)
@@ -270,7 +272,8 @@ void MainWindow::tree_itemClicked_slot(QTreeWidgetItem *item, int column)
 }
 
 // Adding new item
-// This needs 'serial' primary key in the database!
+// Creates a string representation of INSERT command into DB
+// This method needs 'serial' primary key in the database!
 QString MainWindow::sqlInsert_fromValues(QStringList values)
 {
     QString sql_command = "INSERT INTO " + datab_inst_->table_names.at(0) + " (";
@@ -345,7 +348,10 @@ std::vector<QString> MainWindow::edit_memoryItem(int item_position)
         return std::vector<QString>();
     }
 
+    // we make a backup of the row that is being edited
     std::vector<QString> backup = bug_data_->bug_values_.at(item_position);
+
+    // we create a vector of strings to pass our dialog to initialize it's lineEdits with
     std::vector<QString> dialog_parameter(bug_data_->bug_values_.at(item_position).size());
     for(size_t i = 0; i < dialog_parameter.size(); i++)
     {
@@ -356,10 +362,11 @@ std::vector<QString> MainWindow::edit_memoryItem(int item_position)
             dialog_parameter[i] = bug_data_->bug_values_.at(item_position).at(i);
     }
 
-    //ItemEditDialog edit_dialog(0,bug_data_->bug_values_.at(item_position));
+    // creating and calling the edit dialog
     ItemEditDialog edit_dialog(0,dialog_parameter);
-
     edit_dialog.exec();
+
+    // if accepted we modify our memory data
     if(edit_dialog.result() == QDialog::DialogCode::Accepted)
     {
         QStringList result = edit_dialog.return_strings();
@@ -374,6 +381,8 @@ std::vector<QString> MainWindow::edit_memoryItem(int item_position)
             bug_data_->bug_values_.at(item_position).at(i) = result.at(i-1);
         }
     }
+
+    // we return the backed-up row, in case od Database failure
     return backup;
 }
 void MainWindow::tree_itemDoubleClicked_slot(QTreeWidgetItem *item, int column)
@@ -410,10 +419,8 @@ void MainWindow::tree_itemDoubleClicked_slot(QTreeWidgetItem *item, int column)
         }
     }
 
-    qDebug() << "here";
     // Get data from dialog and update our memory
     std::vector<QString> backup = edit_memoryItem(item_position);
-    qDebug() << "here";
 
     if(backup.size() == 0) // the item is out of range, user has been notified, we end
         return;
@@ -423,7 +430,6 @@ void MainWindow::tree_itemDoubleClicked_slot(QTreeWidgetItem *item, int column)
 
     // Update database
     //  UPDATE 'main table' SET col1=val1,... WHERE ID='itemid'
-
     QString sqlCommand = "UPDATE "+ datab_inst_->table_names.at(0) +" SET ";
 
     int i = 0;
@@ -437,9 +443,9 @@ void MainWindow::tree_itemDoubleClicked_slot(QTreeWidgetItem *item, int column)
        }
        i++;
     }
-
     sqlCommand += " WHERE ID=" + ID;
 
+    // We run the update querry and COMMIT the transaction to REMOVE THE LOCK
     QSqlQuery update_querry;
     if(update_querry.exec(sqlCommand + "; COMMIT;"))
         ui->statusBar->showMessage("Database updated successfully.");
@@ -456,11 +462,13 @@ void MainWindow::tree_itemDoubleClicked_slot(QTreeWidgetItem *item, int column)
 // Reseting all the items in the filter
 void MainWindow::on_button_resetCriteria_clicked()
 {
+    // Erase all the text from LineEdits
     ui->edit_Filter1->setText("");
     ui->edit_Filter2->setText("");
     ui->edit_Filter3->setText("");
     ui->edit_Filter4->setText("");
 
+    // Check all the states
     for(int i = 0; i < ui->list_FilterStateChecks->count(); ++i)
         ui->list_FilterStateChecks->item(i)->setCheckState(Qt::CheckState::Checked);
 }
@@ -468,6 +476,7 @@ void MainWindow::on_button_resetCriteria_clicked()
 // Requesting only bugs that satisfy the criteria
 void MainWindow::on_buton_filterBugs_clicked()
 {
+    // We make a huge SELECT SQL query:
 
     QString sql_command = "SELECT * FROM "+ datab_inst_->table_names.at(0) +" WHERE";
     QStringList list_lineEdit;

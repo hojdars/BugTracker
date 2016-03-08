@@ -18,9 +18,11 @@ class ItemEditDialog : public QDialog
 
 public:
     explicit ItemEditDialog(QWidget *parent = 0, std::vector<QString> bug_values = std::vector<QString>());
+
     ~ItemEditDialog();
-    std::unique_ptr< std::vector<QLineEdit*> > line_edits_ptr_;
-    QStringList return_strings();
+
+    std::unique_ptr< std::vector<QLineEdit*> > line_edits_ptr_; // holds the lineEdits so we can access them, note that we do not need deleting the parent does it
+    QStringList return_strings(); // gets the strings from the lineEdits
 
 private:
     Ui::ItemEditDialog *ui;

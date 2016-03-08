@@ -3,9 +3,6 @@ Main todo:
 
 ##### Important stuff:
 
-* enum columns have to be set the true value in set dialog (e.g. 1 = important)
-    * possible fix is making a map with string-to-number and when closing the dialog convert the text to numbers and return numbers. probably via the ```QStringList return_strings()``` method
-
 
 * enum number is hard coded in ```load_tree_fromMemory()```
 
@@ -50,6 +47,10 @@ Done
     * [OK] _With locking for concurrent access_
 * [OK] _refresh button_
 * [OK] _all table names are hard coded_
+* [OK] _enum columns have to be set the true value in set dialog (e.g. 1 = important)_
+    * _possible fix is making a map with string-to-number and when closing the dialog convert the text to numbers and return numbers. probably via the _```QStringList return_strings()```_method_
+
+
 
 Improvements:
 ========

@@ -51,7 +51,6 @@ QString DBSetDialog::dbname() const
 int DBSetDialog::port() const
 {
     // called only after accept which checks convertibility
-    // TODO: not pretty
     QString tmp;
     tmp = ui->le_port->text();
     bool ok;

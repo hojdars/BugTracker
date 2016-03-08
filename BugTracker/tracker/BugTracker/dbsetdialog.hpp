@@ -15,6 +15,7 @@ public:
     explicit DBSetDialog(QWidget *parent = 0);
     ~DBSetDialog();
 
+    // these methods get the value from the lineEdit
     QString dbname() const;
     QString username() const;
     QString password() const;
