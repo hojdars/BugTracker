@@ -14,7 +14,10 @@ ItemEditDialog::ItemEditDialog(QWidget *parent, std::vector<QString> bug_values,
     {
         auto is_enum = data_ptr->enum_cols.find(i);
         if(is_enum != data_ptr->enum_cols.end())
-            widgets_.push_back(new my_ComboBox(this));
+        {
+            // for implementing more enums, change the 1 to meaningfull
+            widgets_.push_back(new my_ComboBox(this,bug_values[i],data_ptr->return_states_atIndex(1)));
+        }
         else
             widgets_.push_back(new my_lineEdit(bug_values[i],this));
     }
@@ -31,16 +34,13 @@ QStringList ItemEditDialog::return_strings(const std::unordered_map<std::string,
     QStringList ret;
 
     int i = 1;
-    for(auto it : *line_edits_ptr_)
+    for(auto it : widgets_)
     {
         auto find = enum_cols.find(i);
-        // we have an enum column
-
         QString ret_val;
-        if(find != enum_cols.end())
+        if(find != enum_cols.end()) // we have an enum column
         {
-            qDebug() << "found";
-            QString str = it->text();
+            QString str = it->get_text();
             std::string std_str = str.toStdString();
 
             auto find_usr_input = state_names.find(std_str);
@@ -48,20 +48,18 @@ QStringList ItemEditDialog::return_strings(const std::unordered_map<std::string,
             {
                 ret_val = QString::number(state_names.at(std_str));
             }
-            else
+            else // user wrote something invalid
             {
-                // user wrote something fucked up
                 ret.clear();
                 return ret;
             }
         }
         else
         {
-            ret_val = it->text();
+            ret_val = it->get_text();
         }
 
         ret.push_back(ret_val);
-        qDebug() << ret_val << "\n";
         i++;
     }
 

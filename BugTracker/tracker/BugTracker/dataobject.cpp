@@ -13,3 +13,13 @@ void DataObject::view_data()
         qDebug() << "\n";
     }
 }
+
+QStringList DataObject::return_states_atIndex(int i)
+{
+    QStringList ret;
+    for(auto it : state_names_)
+    {
+        ret.push_back(it.second);
+    }
+    return ret;
+}

@@ -22,6 +22,8 @@ public:
     std::set< int> enum_cols;
     int bug_count_;
 
+    QStringList return_states_atIndex(int i);
+
     void view_data(); // debug function to view the held data
 };
 

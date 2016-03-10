@@ -30,9 +30,12 @@ class my_ComboBox : public my_widget
 private:
     QComboBox * ptr_;
 public:
-    my_ComboBox(QWidget * ui)
+    my_ComboBox(QWidget * ui, QString value, QStringList&& names )
     {
         ptr_ = new QComboBox(ui);
+        names.sort();
+        ptr_->addItems(names);
+        ptr_->setCurrentIndex(names.indexOf(value,0));
     }
     virtual QWidget * get_ptr()
     {
