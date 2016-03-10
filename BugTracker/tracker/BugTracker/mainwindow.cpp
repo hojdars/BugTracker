@@ -123,6 +123,8 @@ bool MainWindow::prepare_view_data()
         msg.exec();
     }
 
+    // load set with enumerator columns
+    bug_data_->enum_cols.insert(4);
 
     // load state (critical, etc.) into the "Data" object and update the filter check list
     ui->list_FilterStateChecks->clear();
@@ -261,6 +263,7 @@ void MainWindow::tree_itemClicked_slot(QTreeWidgetItem *item, int column)
     // roughly formates with HTML and shows text in description box
     for(auto& field : bug_data_->bug_values_[item_position])
     {
+        // enumerator problems
         if(i != 4)
             text += "<b>" + bug_data_->column_names_.at(i) + "</b>:<br>" +field + "<br><br>";
         else
@@ -312,7 +315,10 @@ void MainWindow::add_edit_newItem()
     if(edit_dialog.result() != QDialog::DialogCode::Accepted)
         return;
 
-    QStringList values = edit_dialog.return_strings();
+    QStringList values = edit_dialog.return_strings(bug_data_->rev_state_names_,bug_data_->enum_cols);
+    if(values.empty())
+        return; // invalid data set
+
 
     // INSERT command with 'values'
     QString sql_command = sqlInsert_fromValues(values);
@@ -337,7 +343,7 @@ void MainWindow::add_edit_newItem()
 }
 
 // Editing an existing item via double clicking
-std::vector<QString> MainWindow::edit_memoryItem(int item_position)
+std::vector<QString> MainWindow::edit_memoryItem(int item_position, int& code)
 {
     // if we are editing out of range, we don't edit
     if(item_position >= bug_data_->bug_values_.size())
@@ -365,16 +371,17 @@ std::vector<QString> MainWindow::edit_memoryItem(int item_position)
     // creating and calling the edit dialog
     ItemEditDialog edit_dialog(0,dialog_parameter);
     edit_dialog.exec();
+    code = edit_dialog.result();
 
     // if accepted we modify our memory data
     if(edit_dialog.result() == QDialog::DialogCode::Accepted)
     {
-        QStringList result = edit_dialog.return_strings();
-
-        // enumerators problems
-        auto fin = bug_data_->rev_state_names_.find(result[3].toStdString());
-        if(fin != bug_data_->rev_state_names_.end())
-            result[3] = QString::number(bug_data_->rev_state_names_.at(result[3].toStdString()));
+        QStringList result = edit_dialog.return_strings(bug_data_->rev_state_names_,bug_data_->enum_cols);
+        if(result.empty())
+        {
+            code = 2; // we signal that user didn't input valid data so the next method ends
+            return backup; // invalid data set
+        }
 
         for(int i = 1; i < bug_data_->column_names_.size(); ++i)
         {
@@ -420,7 +427,14 @@ void MainWindow::tree_itemDoubleClicked_slot(QTreeWidgetItem *item, int column)
     }
 
     // Get data from dialog and update our memory
-    std::vector<QString> backup = edit_memoryItem(item_position);
+    int return_code;
+    std::vector<QString> backup = edit_memoryItem(item_position, return_code);
+    if(return_code != 1)
+    {
+        if(return_code == 2)
+            ui->statusBar->showMessage("Invalid data set. Please set valid data.");
+        return;
+    }
 
     if(backup.size() == 0) // the item is out of range, user has been notified, we end
         return;

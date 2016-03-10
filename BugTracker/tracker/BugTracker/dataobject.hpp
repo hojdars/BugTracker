@@ -5,6 +5,7 @@
 #include <QStringList>
 #include <vector>
 #include <unordered_map>
+#include <set>
 #include <QDebug>
 
 class DataObject
@@ -18,6 +19,7 @@ public:
     DataObject() = default;
 
     std::vector< std::vector<QString> > bug_values_; // the values of the bugs
+    std::set< int> enum_cols;
     int bug_count_;
 
     void view_data(); // debug function to view the held data

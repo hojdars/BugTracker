@@ -4,6 +4,8 @@
 #include <QDialog>
 #include <QLineEdit>
 #include <memory>
+#include <unordered_map>
+#include <set>
 #include <QDebug>
 
 #include <vector>
@@ -22,7 +24,8 @@ public:
     ~ItemEditDialog();
 
     std::unique_ptr< std::vector<QLineEdit*> > line_edits_ptr_; // holds the lineEdits so we can access them, note that we do not need deleting the parent does it
-    QStringList return_strings(); // gets the strings from the lineEdits
+    QStringList return_strings(const std::unordered_map<std::string, int>& state_names,
+                               const std::set< int>& enum_cols); // gets the strings from the lineEdits
 
 private:
     Ui::ItemEditDialog *ui;
