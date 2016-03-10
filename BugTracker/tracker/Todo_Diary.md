@@ -7,6 +7,8 @@ Main todo:
 
 * replace unordered_map with unordered_map of unordered_maps for enumerators :D
 
+* table names not loading
+
 Done
 ====
 

@@ -312,7 +312,7 @@ void MainWindow::add_edit_newItem()
         initial_textvalues.push_back(it);
     }
 
-    ItemEditDialog edit_dialog(0,initial_textvalues);
+    ItemEditDialog edit_dialog(0,initial_textvalues, bug_data_.get());
     edit_dialog.exec();
 
     if(edit_dialog.result() != QDialog::DialogCode::Accepted)
@@ -373,7 +373,7 @@ std::vector<QString> MainWindow::edit_memoryItem(int item_position, int& code)
     }
 
     // creating and calling the edit dialog
-    ItemEditDialog edit_dialog(0,dialog_parameter);
+    ItemEditDialog edit_dialog(0,dialog_parameter, bug_data_.get());
     edit_dialog.exec();
     code = edit_dialog.result();
 
