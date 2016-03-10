@@ -3,17 +3,9 @@ Main todo:
 
 ##### Important stuff:
 
+* add a QComboBox for all enum types in ItemEditDialog
 
-* enum number is hard coded in ```load_tree_fromMemory()```
-
-
-* enum columns are not interchangable, only one column is the one
-
-
-##### Minor stuff:
-
-* Abusing signals to do slot's job
-
+* replace unordered_map with unordered_map of unordered_maps for enumerators :D
 
 Done
 ====

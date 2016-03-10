@@ -125,6 +125,7 @@ bool MainWindow::prepare_view_data()
 
     // load set with enumerator columns
     bug_data_->enum_cols.insert(4);
+    bug_data_->enum_cols.insert(7);
 
     // load state (critical, etc.) into the "Data" object and update the filter check list
     ui->list_FilterStateChecks->clear();
@@ -201,8 +202,9 @@ void MainWindow::load_tree_fromMemory()
         int col_counter = 0;
         for(auto& column_string : mem_item)
         {
-            // for enum type columns
-            if(col_counter == 4)
+
+            auto is_enum = bug_data_->enum_cols.find(col_counter);
+            if(is_enum != bug_data_->enum_cols.end())
                 item->setText(col_counter, bug_data_->state_names_[column_string.toInt()]);
             else
                 item->setText(col_counter,column_string);
@@ -264,7 +266,8 @@ void MainWindow::tree_itemClicked_slot(QTreeWidgetItem *item, int column)
     for(auto& field : bug_data_->bug_values_[item_position])
     {
         // enumerator problems
-        if(i != 4)
+        auto is_enum = bug_data_->enum_cols.find(i);
+        if(is_enum == bug_data_->enum_cols.end())
             text += "<b>" + bug_data_->column_names_.at(i) + "</b>:<br>" +field + "<br><br>";
         else
             text += "<b>" + bug_data_->column_names_.at(i) + "</b>:<br>" +bug_data_->state_names_.at(field.toInt()) + "<br><br>";
@@ -362,7 +365,8 @@ std::vector<QString> MainWindow::edit_memoryItem(int item_position, int& code)
     for(size_t i = 0; i < dialog_parameter.size(); i++)
     {
         // enumarators problems
-        if(i == 4)
+        auto is_enum = bug_data_->enum_cols.find(i);
+        if(is_enum != bug_data_->enum_cols.end())
             dialog_parameter[i] = bug_data_->state_names_[bug_data_->bug_values_.at(item_position).at(i).toInt()];
         else
             dialog_parameter[i] = bug_data_->bug_values_.at(item_position).at(i);
