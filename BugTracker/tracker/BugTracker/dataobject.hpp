@@ -13,6 +13,9 @@ class DataObject
 public:
     QStringList column_names_;
 
+    // for multiple enumerator columns implement these into vector
+    // and implement correctly return_states_atIndex(int i)
+    // and fix all the references to that function
     std::unordered_map<int, QString> state_names_; // ID -> enumerator names
     std::unordered_map<std::string, int> rev_state_names_; // enum name -> ID
 

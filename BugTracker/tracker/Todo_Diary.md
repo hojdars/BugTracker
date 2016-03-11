@@ -3,8 +3,6 @@ Main todo:
 
 ##### Important stuff:
 
-* add a QComboBox for all enum types in ItemEditDialog
-
 * replace unordered_map with unordered_map of unordered_maps for enumerators :D
 
 * table names not loading

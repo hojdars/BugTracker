@@ -33,7 +33,7 @@ QStringList ItemEditDialog::return_strings(const std::unordered_map<std::string,
 {
     QStringList ret;
 
-    int i = 1;
+    int i = 1; // we cannot edit the first 'ID' column
     for(auto it : widgets_)
     {
         auto find = enum_cols.find(i);

@@ -12,17 +12,31 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     connect(ui->tree_bugView,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),this,SLOT(tree_itemDoubleClicked_slot(QTreeWidgetItem*,int)));
     connect(ui->tree_bugView,SIGNAL(itemClicked(QTreeWidgetItem*,int)),this,SLOT(tree_itemClicked_slot(QTreeWidgetItem*,int)));
 
+    datab_inst_ = nullptr;
+
     // Load config.ini
+    bool ok_state = initialize_DB();
+    if(ok_state)
+    {
+        // Connect to the DB and do everything associated with it - erasing memory, loading new bugs, updating the TreeWidget
+        load_new_database();
+    }
+}
+
+bool MainWindow::initialize_DB()
+{
     int port_setting = 5432;
     std::vector<QString> db_settings(4,0); // we need 4 items in the vector - username, password, database name, host name
     std::vector<QString> tables; // we dont know how many tables there are
-    load_settings(db_settings,port_setting, tables);
+    bool ok_state = load_settings(db_settings,port_setting, tables);
 
-    // Make a DB handler
-    datab_inst_ = std::make_unique<DBHandler>(db_settings, port_setting, tables);
+    if(ok_state)
+    {
+        // Make a DB handler
+        datab_inst_ = std::make_unique<DBHandler>(db_settings, port_setting, tables);
+    }
 
-    // Connect to the DB and do everything associated with it - erasing memory, loading new bugs, updating the TreeWidget
-    load_new_database();
+    return ok_state;
 }
 
 MainWindow::~MainWindow()
@@ -31,7 +45,7 @@ MainWindow::~MainWindow()
 }
 
 // Loading settings
-void MainWindow::load_settings(std::vector<QString>& dbparams, int& port, std::vector<QString>& tables)
+bool MainWindow::load_settings(std::vector<QString>& dbparams, int& port, std::vector<QString>& tables)
 {
     // load connection settings from 'settings.ini'
     dbparams[0] = "postgres";
@@ -47,7 +61,6 @@ void MainWindow::load_settings(std::vector<QString>& dbparams, int& port, std::v
         QMessageBox msg;
         msg.setText("Settings not found, using default.\nPlease set them in the 'Settings' menu.");
         msg.exec();
-        return;
     }
     std::string name,pass,host,db;
     ifs >> name >>  pass >>  host >> db >> port;
@@ -62,22 +75,38 @@ void MainWindow::load_settings(std::vector<QString>& dbparams, int& port, std::v
     if(!ifs.is_open())
     {
         QMessageBox msg;
-        msg.setText("Table names not found, using default.\nPlease create a 'tables.ini' file with table names in it.");
+        msg.setText("Table names not found, the program cannot continue.\nPlease create a 'tables.ini' file with table names in it.");
         msg.exec();
-        return;
+        return false;
     }
     std::string text_in;
     while(ifs >> text_in)
         tables.push_back(QString::fromStdString(text_in));
 
     ifs.close();
+    return true;
 }
 
 // Loading new database
 void MainWindow::load_new_database()
 {
-    // if we are connected, the handler will close the connection
-    datab_inst_->close();
+    // Check if DB is set, if not, load configuration
+    if(datab_inst_ == nullptr)
+    {
+        bool ok_state = initialize_DB();
+        if(!ok_state)
+        {
+            QMessageBox msg;
+            msg.setText("Settings not loaded correctly.\n Please fix any remaining issues before you can connect to the DB.");
+            msg.exec();
+            return;
+        }
+    }
+    else
+    {
+        // if we are connected, the handler will close the connection
+        datab_inst_->close();
+    }
 
     // We clear the tree
     ui->tree_bugView->clear();
