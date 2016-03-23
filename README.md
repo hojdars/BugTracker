@@ -22,7 +22,7 @@ Once connected, all of the bugs should load into the program and you are free to
 
 Editing an existing bug is done by **double clicking** on the row of the bug. This brings up a dialog where you can edit the bug. If you fail to make a valid bug entry, the dialog closes and a SQL error is shown in the status bar of the program.
 
-Adding a new bug is done through **Bug -> Add a new bug** in the menu. Again, a dialog appears and you have to fill in every field with the respective types of values (i.e. "False" if the colums is boolean, "25" if it is a number,...). If you fail to make a valid bug entry, the dialog closes and a SQL error is shown in the status bar of the program.
+Adding a new bug is done through **Bug -> Add a new bug** in the menu. Again, a dialog appears and you have to fill in every field with the respective types of values (i.e. "False" if the columns is boolean, "25" if it is a number,...). If you fail to make a valid bug entry, the dialog closes and a SQL error is shown in the status bar of the program.
 
 Note: the program expects more users working on the same database at the same time and is safe against this behavior. Therefore, two messages can show up when editing a bug.
 
@@ -30,6 +30,37 @@ Note: the program expects more users working on the same database at the same ti
 
 * _"This bug has been edited and has a new value, please relod the database."_ In this case, the user finished editing the bug and you are now viewing an older version. The program wants you to reload the database, so it can download the new version and let you edit it safely, without losing your colleague's data.
 
-Note: you login as a user to the database, if you do not have the rights to modify the database, you will not be able to do according actions (like edit, add or even view the bugs), this is a database problem and you should refer to your databse administrator.
+Note: you login as a user to the database, if you do not have the rights to modify the database, you will not be able to do according actions (like edit, add or even view the bugs), this is a database problem and you should refer to your database administrator.
 
 ### Developer Documentation
+
+The program is composed out of **N** components. Namel:
+* Database object - ```dbhandler.hpp```
+* Data object  - ```dataobject.hpp```
+* Item Editor dialog - ```itemeditdialog.hpp```
+* DB settings dialog - ```dbsetdialog.hpp```
+* Main Window - ```mainwindow.hpp```
+
+##### Database object
+This class is a simple handler for the DB connection. The connection is stored in this object, along with the user data used for connection (such as username, hostname, and so on). When the ```QSqlDatabase``` object is destroyed, it kills the connection, so the whole ```DBHandler``` doesn't need a specific destructor.
+
+##### Data object
+The only reason for this object is bundling all the Bug data together. It doesn't have any methods operating it, all the components manipulate the data themselves. It stores the bugs in ```bug_values_```, it remembers which columns are enumerators in ```enum_cols```, it remembers names of columns in ```column_names_``` and it can translate the enum types to their values and back with ```state_names_``` and ```rev_state_names_```.
+
+We store the data as ```QString```, because the ```QTreeView``` can only show ```QString``` objects. Therefore we need to convert all the data into strings. This helps with editing as well, since it allows the user to write the new data as a text.
+
+If implementing support for multiple enumerator columns, some changes need to be made. See below the chapter about **Improving and adding features**.
+
+##### Item Editor dialog
+This dialog is used to edit (or add) bugs in the database. It modifies itself, adding the needed amount of ```QLineEdit``` for normal data and ```QComboBox``` for enumerator type columns.
+
+To accomplish this, three classes are implemented, ```my_widget```, and its two children ```my_ComboBox``` and ```my_lineEdit```. This is done to provide ```get_text()``` interface for the dialog to call upon being accepted and to store both types of these ```QWidget``` objects in one container ```widgets_```.
+
+A ```return_strings()``` method is implemented and called on the dialog upon the user pressing _Done_.
+
+##### Database settings dialog
+This is a very simple dialog, which lets you edit its items and if the values are accepted (the dialog checks, if the port number is indeed an integer) allows the calling code to access the values that the user accepted by methods such as ```QString username() const```.
+
+## MAINWINDOW
+
+##### Improving and adding features
