@@ -61,6 +61,22 @@ A ```return_strings()``` method is implemented and called on the dialog upon the
 ##### Database settings dialog
 This is a very simple dialog, which lets you edit its items and if the values are accepted (the dialog checks, if the port number is indeed an integer) allows the calling code to access the values that the user accepted by methods such as ```QString username() const```.
 
-## MAINWINDOW
+##### MainWindow class
+
+The runtime of the program relies on this class entirely. It's constructor is called upon opening the program. This class does several things:
+
+* loads settings
+* connects to the DB
+* load/displays/modifies the data from DB
+* shows all GUI
+
+The DB is initialized by calling ```initialize_DB()``` which loads the settings and if all is correct, instantiates the Database Handler to a state with all its settings filed. ```load_new_database()``` then completely loads the DB into memory and displays it.
+
+The MainWindow also handles all events that arise, handling things like clicking on buttons and doing the appropriate things. Methods with ```_slot``` in name are action handling methods, ```_triggered``` shows that the method handles a menu action while ```_clicked``` signalizes a button.
+
+The main two features are viewing the bug, editing the bug and adding new bugs. This is handled in the methods (slots) ```tree_itemClicked_slot()``` and ```tree_itemDoubleClicked_slot()``` as well as ```add_new_item()``` which handles adding a new bug.
 
 ##### Improving and adding features
+The main improvement that can be made to the application is adding the supprt for more enumerator columns. This should be very easy and the ground for this feature is prepared. There is a set for storing the information of which columns are enumerators in the DataObject class, and the two maps for converting values to IDs (in the relation DB) and back can be each made into a vector of maps. The method ```return_states_atIndex()``` is prepared which serves for returing all the states of a given enumerator's index which is needed **(and used by)** the ComboBoxes in ItemEditDialog. Reimplementing this method will make the ComboBoxes work properly. The only thing left to do is add the Database-side support (tables which indicate what columns are enumerators and the adequate enum tables) and changing the ```prepare_view_data()``` which loads the names of columns and the enumerator column to a state where all the enumerator columns are loaded.
+
+One more thing to improve would be some kind of DB data paging, to allow the program to download only smaller chunks of data drom the DB. Note that I have **not** prepared ground for this change and it might require a more solid ```load_query_intoMemory()``` method implementation as it now does something like ```SELECT * from main_table;``` and load it into memory split accordingly.

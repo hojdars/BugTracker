@@ -102,7 +102,7 @@ void MainWindow::load_new_database()
             return;
         }
     }
-    else
+    if(datab_inst_->is_open())
     {
         // if we are connected, the handler will close the connection
         datab_inst_->close();
@@ -250,7 +250,7 @@ void MainWindow::load_tree_fromMemory()
 
 void MainWindow::on_actionAdd_new_bug_triggered()
 {
-    add_edit_newItem();
+    add_new_item();
 }
 void MainWindow::on_actionSettings_triggered()
 {
@@ -332,7 +332,7 @@ QString MainWindow::sqlInsert_fromValues(QStringList values)
     sql_command += ");";
     return sql_command;
 }
-void MainWindow::add_edit_newItem()
+void MainWindow::add_new_item()
 {
     // Load up column names as initial values for the dialog
     std::vector<QString> initial_textvalues;
