@@ -361,6 +361,7 @@ p, li { white-space: pre-wrap; }
     </property>
     <addaction name="actionConnect"/>
     <addaction name="actionSettings"/>
+    <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuOptions">
     <property name="title">
@@ -386,20 +387,37 @@ p, li { white-space: pre-wrap; }
    <property name="text">
     <string>Connect to database</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
+   </property>
   </action>
   <action name="actionSettings">
    <property name="text">
     <string>Database connection settings</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
    </property>
   </action>
   <action name="actionAdd_new_bug">
    <property name="text">
     <string>Add new bug</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
+   </property>
   </action>
   <action name="actionRefresh_bugs">
    <property name="text">
     <string>Refresh bugs</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
    </property>
   </action>
  </widget>

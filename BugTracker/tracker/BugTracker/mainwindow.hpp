@@ -45,6 +45,8 @@ private slots:
 
     void on_actionRefresh_bugs_triggered();
 
+    void on_actionExit_triggered();
+
 private:
     std::unique_ptr<DBHandler> datab_inst_;
     std::unique_ptr<DataObject> bug_data_;

@@ -576,3 +576,8 @@ void MainWindow::on_buton_filterBugs_clicked()
 }
 
 
+
+void MainWindow::on_actionExit_triggered()
+{
+    exit(0);
+}

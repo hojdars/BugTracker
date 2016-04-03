@@ -56,6 +56,7 @@ public:
     my_lineEdit(QString text, QWidget * ui)
     {
         ptr_ = new QLineEdit(text,ui);
+        ptr_->setDragEnabled(true);
     }
     virtual QWidget * get_ptr()
     {
