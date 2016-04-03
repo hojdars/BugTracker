@@ -7,7 +7,7 @@ DBHandler::DBHandler()
     set_params("postgres","root","localhost","testdb",5432);
 }
 
-DBHandler::DBHandler(std::vector<QString>& dbparams ,int port, std::vector<QString> & tablenames)
+DBHandler::DBHandler(std::vector<QString>& dbparams ,int port)
 {
     username_ = dbparams[0];
     password_ = dbparams[1];
@@ -16,8 +16,11 @@ DBHandler::DBHandler(std::vector<QString>& dbparams ,int port, std::vector<QStri
     port_ = port;
     database_ = QSqlDatabase::addDatabase("QPSQL");
 
-    table_names = std::move(tablenames);
 
+    table_names = std::vector<QString>();
+    table_names.push_back("lidi");
+    table_names.push_back("states");
+    table_names.push_back("cols");
 }
 
 void DBHandler::set_params(QString username, QString  password, QString  hostname,

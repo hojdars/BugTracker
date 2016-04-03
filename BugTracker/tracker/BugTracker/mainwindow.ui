@@ -296,46 +296,21 @@
             </property>
             <item>
              <property name="text">
-              <string>Important</string>
+              <string>Bug types will appear here</string>
              </property>
-             <property name="checkState">
-              <enum>Checked</enum>
+             <property name="font">
+              <font>
+               <italic>true</italic>
+              </font>
              </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Normal</string>
-             </property>
-             <property name="checkState">
-              <enum>Unchecked</enum>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Solved</string>
-             </property>
-             <property name="checkState">
-              <enum>Unchecked</enum>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>New Item</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>New Item</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>New Item</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>New Item</string>
+             <property name="foreground">
+              <brush brushstyle="NoBrush">
+               <color alpha="255">
+                <red>66</red>
+                <green>66</green>
+                <blue>66</blue>
+               </color>
+              </brush>
              </property>
             </item>
            </widget>

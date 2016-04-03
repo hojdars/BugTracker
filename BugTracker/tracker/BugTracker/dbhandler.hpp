@@ -12,7 +12,7 @@ class DBHandler
 {
 public:
     DBHandler();
-    DBHandler(std::vector<QString>& dbparams ,int port, std::vector<QString> & tablenames);
+    DBHandler(std::vector<QString>& dbparams ,int port);
 
     bool is_open(){ return database_.isOpen(); }
 

@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 
     // Load config.ini
     bool ok_state = initialize_DB();
+
     if(ok_state)
     {
         // Connect to the DB and do everything associated with it - erasing memory, loading new bugs, updating the TreeWidget
@@ -27,15 +28,13 @@ bool MainWindow::initialize_DB()
 {
     int port_setting = 5432;
     std::vector<QString> db_settings(4,0); // we need 4 items in the vector - username, password, database name, host name
-    std::vector<QString> tables; // we dont know how many tables there are
-    bool ok_state = load_settings(db_settings,port_setting, tables);
+    bool ok_state = load_settings(db_settings,port_setting);
 
     if(ok_state)
     {
         // Make a DB handler
-        datab_inst_ = std::make_unique<DBHandler>(db_settings, port_setting, tables);
+        datab_inst_ = std::make_unique<DBHandler>(db_settings, port_setting);
     }
-
     return ok_state;
 }
 
@@ -45,7 +44,7 @@ MainWindow::~MainWindow()
 }
 
 // Loading settings
-bool MainWindow::load_settings(std::vector<QString>& dbparams, int& port, std::vector<QString>& tables)
+bool MainWindow::load_settings(std::vector<QString>& dbparams, int& port)
 {
     // load connection settings from 'settings.ini'
     dbparams[0] = "postgres";
@@ -56,33 +55,22 @@ bool MainWindow::load_settings(std::vector<QString>& dbparams, int& port, std::v
 
     std::ifstream ifs;
     ifs.open("settings.ini");
+    std::string name,pass,host,db;
+
     if(!ifs.is_open())
     {
         QMessageBox msg;
         msg.setText("Settings not found, using default.\nPlease set them in the 'Settings' menu.");
         msg.exec();
     }
-    std::string name,pass,host,db;
-    ifs >> name >>  pass >>  host >> db >> port;
+    else
+    {
+        ifs >> name >>  pass >>  host >> db >> port;
+    }
     dbparams[0] = QString::fromStdString(name);
     dbparams[1] = QString::fromStdString(pass);
     dbparams[2] = QString::fromStdString(host);
     dbparams[3] = QString::fromStdString(db);
-    ifs.close();
-
-    // load table settings from 'tables.ini'
-    ifs.open("tables.ini");
-    if(!ifs.is_open())
-    {
-        QMessageBox msg;
-        msg.setText("Table names not found, the program cannot continue.\nPlease create a 'tables.ini' file with table names in it.");
-        msg.exec();
-        return false;
-    }
-    std::string text_in;
-    while(ifs >> text_in)
-        tables.push_back(QString::fromStdString(text_in));
-
     ifs.close();
     return true;
 }
@@ -90,23 +78,15 @@ bool MainWindow::load_settings(std::vector<QString>& dbparams, int& port, std::v
 // Loading new database
 void MainWindow::load_new_database()
 {
+    // We clear the previous DB Handler, this connection is dead
     datab_inst_ = nullptr;
-    // Check if DB is set, if not, load configuration
-    if(datab_inst_ == nullptr)
+    bool ok_state = initialize_DB();
+    if(!ok_state)
     {
-        bool ok_state = initialize_DB();
-        if(!ok_state)
-        {
-            QMessageBox msg;
-            msg.setText("Settings not loaded correctly.\n Please fix any remaining issues before you can connect to the DB.");
-            msg.exec();
-            return;
-        }
-    }
-    if(datab_inst_->is_open())
-    {
-        // if we are connected, the handler will close the connection
-        datab_inst_->close();
+        QMessageBox msg;
+        msg.setText("Settings not loaded correctly.\n Please fix any remaining issues before you can connect to the DB.");
+        msg.exec();
+        return;
     }
 
     // We clear the tree
@@ -137,6 +117,7 @@ void MainWindow::load_new_database()
 bool MainWindow::prepare_view_data()
 {
     bool success = true;
+    QString all_errors = "";
 
     // load collumn names into the "Data" object
     QSqlQuery qry;
@@ -148,9 +129,7 @@ bool MainWindow::prepare_view_data()
     else
     {
         success = false;
-        QMessageBox msg;
-        msg.setText("Error loading column names.\n" + qry.lastError().text() );
-        msg.exec();
+        all_errors += "Error loading column names.\n";
     }
 
     // load set with enumerator columns
@@ -177,8 +156,12 @@ bool MainWindow::prepare_view_data()
     else
     {
         success = false;
+        all_errors += "Error loading state names.\n";
+    }
+    if(!success)
+    {
         QMessageBox msg;
-        msg.setText("Error loading state names.\n" + qry.lastError().text());
+        msg.setText(all_errors);
         msg.exec();
     }
     return success;

@@ -57,7 +57,7 @@ private:
     bool prepare_view_data();
     void load_query_intoMemory(QString command);
     void load_tree_fromMemory();
-    bool load_settings(std::vector<QString>& dbparams, int& port, std::vector<QString>& tables);
+    bool load_settings(std::vector<QString>& dbparams, int& port);
     std::vector<QString> edit_memoryItem(int item_position, int & code);
     void add_new_item();
     QString sqlInsert_fromValues(QStringList values);
