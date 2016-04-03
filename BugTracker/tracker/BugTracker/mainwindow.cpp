@@ -90,6 +90,7 @@ bool MainWindow::load_settings(std::vector<QString>& dbparams, int& port, std::v
 // Loading new database
 void MainWindow::load_new_database()
 {
+    datab_inst_ = nullptr;
     // Check if DB is set, if not, load configuration
     if(datab_inst_ == nullptr)
     {
@@ -258,11 +259,11 @@ void MainWindow::on_actionSettings_triggered()
     DBSetDialog dialog(this);
     dialog.exec();
 
-    // Updates the DB parameters.
-    datab_inst_->set_params(dialog.username(), dialog.password(),
-                           dialog.hostname(), dialog.dbname(), dialog.port());
-
-    ui->statusBar->showMessage("OK, database set successfully.");
+    if(dialog.result() != QDialog::DialogCode::Accepted)
+    {
+        ui->statusBar->showMessage("Settings not set. No data updated.");
+        return;
+    }
 
     // Writes it to 'settings.ini' file
     std::fstream ofs;
@@ -272,6 +273,15 @@ void MainWindow::on_actionSettings_triggered()
         << std::endl << dialog.port();
 
     ofs.close();
+    ui->statusBar->showMessage("OK, database connection set successfully.");
+
+    /*
+    if(datab_inst_ != nullptr)
+    {
+        // Updates the DB parameters.
+        datab_inst_->set_params(dialog.username(), dialog.password(),
+                               dialog.hostname(), dialog.dbname(), dialog.port());
+    }*/
 }
 void MainWindow::on_actionConnect_triggered()
 {
