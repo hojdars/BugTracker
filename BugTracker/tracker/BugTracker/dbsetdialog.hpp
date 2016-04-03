@@ -2,6 +2,8 @@
 #define DBSETDIALOG_HPP
 
 #include <QDialog>
+#include <iostream>
+#include <fstream>
 
 namespace Ui {
 class DBSetDialog;

@@ -18,9 +18,9 @@ DBHandler::DBHandler(std::vector<QString>& dbparams ,int port)
 
 
     table_names = std::vector<QString>();
-    table_names.push_back("lidi");
-    table_names.push_back("states");
-    table_names.push_back("cols");
+    table_names.push_back("bugtable");
+    table_names.push_back("bugstates");
+    table_names.push_back("columns");
 }
 
 void DBHandler::set_params(QString username, QString  password, QString  hostname,

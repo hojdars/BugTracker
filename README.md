@@ -12,7 +12,14 @@ It is a simple bug tracking software using ```PostgreSQL``` and ```Qt``` allowin
 ### User Documentation
 
 The program is a bug tracking software, using a remote PostgreSQL database.
-In the _Settings_ tab, you can set the database parameters, like the hostname, database name, user name and password. The _Table of table names_ variable is important to set, as this is the table in the database where you can specify the all the names of other tables you would like to use.
+In the _Settings_ tab, you can set the database parameters, like the hostname, database name, user name and password.
+
+When setting up the database note, that it **has** to have these three tables:
+* bugtable - the data of the bug reports
+* bugstates - the enumerable states of the bug (Normal, Important,...)
+* columns - the names of the columns of the main bugtable, to display in the view
+
+**You can use the sql example database named `example_database.sql` that is added to the project. This is a predefined example SQL query that will set the whole database up itself.**
 
 You can specify one enum type (there is more information about this restriction in the _Developer_ part of the docs) and assign it to multiple columns. For example: you can have a "bug importance" enum, and have two levels of importance in two columns, both of which would use this enum type.  
 

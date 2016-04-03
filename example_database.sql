@@ -4,7 +4,7 @@
 
 -- Dumped from database version 9.4.5
 -- Dumped by pg_dump version 9.4.5
--- Started on 2016-04-03 14:41:17
+-- Started on 2016-04-03 20:36:20
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -56,24 +56,24 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- TOC entry 173 (class 1259 OID 16404)
--- Name: cols; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- TOC entry 174 (class 1259 OID 16412)
+-- Name: bugstates; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE TABLE cols (
+CREATE TABLE bugstates (
     "ID" integer NOT NULL,
-    column_name character varying(40)
+    state_name character varying(40)
 );
 
 
-ALTER TABLE cols OWNER TO postgres;
+ALTER TABLE bugstates OWNER TO postgres;
 
 --
 -- TOC entry 172 (class 1259 OID 16394)
--- Name: lidi; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: bugtable; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE TABLE lidi (
+CREATE TABLE bugtable (
     id integer NOT NULL,
     name character varying(40),
     author character varying(50),
@@ -85,7 +85,20 @@ CREATE TABLE lidi (
 );
 
 
-ALTER TABLE lidi OWNER TO postgres;
+ALTER TABLE bugtable OWNER TO postgres;
+
+--
+-- TOC entry 173 (class 1259 OID 16404)
+-- Name: columns; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE columns (
+    "ID" integer NOT NULL,
+    column_name character varying(40)
+);
+
+
+ALTER TABLE columns OWNER TO postgres;
 
 --
 -- TOC entry 175 (class 1259 OID 16423)
@@ -108,37 +121,66 @@ ALTER TABLE foo_a_seq OWNER TO postgres;
 -- Name: foo_a_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
-ALTER SEQUENCE foo_a_seq OWNED BY lidi.id;
+ALTER SEQUENCE foo_a_seq OWNED BY bugtable.id;
 
-
---
--- TOC entry 174 (class 1259 OID 16412)
--- Name: states; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE states (
-    "ID" integer NOT NULL,
-    state_name character varying(40)
-);
-
-
-ALTER TABLE states OWNER TO postgres;
 
 --
 -- TOC entry 1891 (class 2604 OID 16425)
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY lidi ALTER COLUMN id SET DEFAULT nextval('foo_a_seq'::regclass);
+ALTER TABLE ONLY bugtable ALTER COLUMN id SET DEFAULT nextval('foo_a_seq'::regclass);
+
+
+--
+-- TOC entry 2009 (class 0 OID 16412)
+-- Dependencies: 174
+-- Data for Name: bugstates; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY bugstates ("ID", state_name) FROM stdin;
+1	Important
+2	Normal
+3	Solved
+5	Zelenej!
+11	Modrej.
+\.
+
+
+--
+-- TOC entry 2007 (class 0 OID 16394)
+-- Dependencies: 172
+-- Data for Name: bugtable; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY bugtable (id, name, author, date, importance, description, tested, showdown) FROM stdin;
+13	Kaja gott	Pokuser	2015-01-01	1	aaaaa	t	1
+15	Testing concurrence.mmm	Já	2016-02-27	11	qqqq	t	2
+6	Tento projekt neexistuje	JustSayin	2014-01-01	3	Projekt neexistuje, měl by se vytvořit.	f	11
+18	Posledni	Tester	2016-03-11	1	Snad to faka.	t	11
+4	Hroch snědl všechen med....	Hroch	2015-12-31	1	Omlouvám se, nechtěl jsem.	f	1
+3	kaja gottttt	Anonym	2016-02-11	1	Nepřijde vám divné, že tady edituje Karel Gott?	f	5
+11	Konecne	Prvni	2016-02-24	11	Konecne sem to sem dostal pres Add BUG!	t	11
+16	Name	Author	2015-01-01	3	Description PPPPPPP	f	2
+1	Včelka Mája...	Karel Gott	2015-02-10	2	Mája je v naší verzi sršeň, né včela. Napravit, obludy!	t	2
+5	Slon v databázi	Hroch a spol.	2015-11-17	3	V databázi je slon?! Jmenuje se postgres, a je modrej...	t	1
+14	Update Stavů	Štěpán	2016-02-25	11	Projekt se blíží ke zdárnému konci, to je fajn. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.	t	11
+12	Edit gottttttt	Edit	1900-01-01	5	Edit	f	2
+19	INsert	Please	9999-01-10	11	qqon	f	1
+20	Ahoj	Test	2016-04-03	11	Proč to neinsertnulo?	t	1
+21	sqsq	asf	1195-01-01	11	cejel	t	2
+2	vcelka	Rýpalovič	2016-02-10	2	Chybí háček nad č. Grammar Nazi united.	t	5
+17	Name	Author	2001-01-01	1	Descriptioneeering	t	1
+\.
 
 
 --
 -- TOC entry 2008 (class 0 OID 16404)
 -- Dependencies: 173
--- Data for Name: cols; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: columns; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY cols ("ID", column_name) FROM stdin;
+COPY columns ("ID", column_name) FROM stdin;
 1	ID
 2	Name
 3	Author
@@ -156,46 +198,7 @@ COPY cols ("ID", column_name) FROM stdin;
 -- Name: foo_a_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('foo_a_seq', 18, true);
-
-
---
--- TOC entry 2007 (class 0 OID 16394)
--- Dependencies: 172
--- Data for Name: lidi; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY lidi (id, name, author, date, importance, description, tested, showdown) FROM stdin;
-13	Kaja gott	Pokuser	2015-01-01	1	aaaaa	t	1
-16	Name	Author	1111-01-01	11	Description PPPPPPP	f	1
-15	Testing concurrence.mmm	Já	2016-02-27	11	qqqq	t	2
-6	Tento projekt neexistuje	JustSayin	2014-01-01	3	Projekt neexistuje, měl by se vytvořit.	f	11
-18	Posledni	Tester	2016-03-11	1	Snad to faka.	t	11
-4	Hroch snědl všechen med....	Hroch	2015-12-31	1	Omlouvám se, nechtěl jsem.	f	1
-12	Edit gott	Edit	1900-01-01	5	Edit	f	2
-3	kaja gottttt	Anonym	2016-02-11	1	Nepřijde vám divné, že tady edituje Karel Gott?	f	5
-5	Slon v databázi	Hroch a spol.	2015-11-17	2	V databázi je slon?! Jmenuje se postgres, a je modrej...	t	1
-1	Včelka Mája...	Karel Gott	2015-02-10	1	Mája je v naší verzi sršeň, né včela. Napravit, obludy!	t	2
-2	vcelka	Rýpalovič	2016-02-10	2	Chybí háček nad č. Grammar Nazi united.	t	5
-11	Konecne	Prvni	2016-02-24	1	Konecne sem to sem dostal pres Add BUG!	t	2
-17	Name	Author	2001-01-01	1	Descriptioneeering	t	1
-14	Update Stavů	Štěpán	2016-02-25	11	Projekt se blíží ke zdárnému konci, to je fajn. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.	t	11
-\.
-
-
---
--- TOC entry 2009 (class 0 OID 16412)
--- Dependencies: 174
--- Data for Name: states; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY states ("ID", state_name) FROM stdin;
-1	Important
-2	Normal
-3	Solved
-5	Zelenej!
-11	Modrej.
-\.
+SELECT pg_catalog.setval('foo_a_seq', 21, true);
 
 
 --
@@ -203,7 +206,7 @@ COPY states ("ID", state_name) FROM stdin;
 -- Name: IDNum; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
-ALTER TABLE ONLY cols
+ALTER TABLE ONLY columns
     ADD CONSTRAINT "IDNum" PRIMARY KEY ("ID");
 
 
@@ -212,7 +215,7 @@ ALTER TABLE ONLY cols
 -- Name: idkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
-ALTER TABLE ONLY states
+ALTER TABLE ONLY bugstates
     ADD CONSTRAINT idkey PRIMARY KEY ("ID");
 
 
@@ -221,7 +224,7 @@ ALTER TABLE ONLY states
 -- Name: lidi_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
-ALTER TABLE ONLY lidi
+ALTER TABLE ONLY bugtable
     ADD CONSTRAINT lidi_pkey PRIMARY KEY (id);
 
 
@@ -237,7 +240,7 @@ GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
--- Completed on 2016-04-03 14:41:17
+-- Completed on 2016-04-03 20:36:20
 
 --
 -- PostgreSQL database dump complete

@@ -6,6 +6,30 @@ DBSetDialog::DBSetDialog(QWidget *parent) :
     ui(new Ui::DBSetDialog)
 {
     ui->setupUi(this);
+    std::string name,pass,host,db;
+    int port;
+
+    // load connection settings from 'settings.ini'
+    name = "postgres";
+    pass = "root";
+    host = "localhost";
+    db = "testdb";
+    port = 5432;
+
+    std::ifstream ifs;
+    ifs.open("settings.ini");
+
+    if(ifs.is_open())
+    {
+        ifs >> name >>  pass >>  host >> db >> port;
+    }
+    ifs.close();
+
+    ui->le_username->setText(QString::fromStdString(name));
+    ui->le_pass->setText(QString::fromStdString(pass));
+    ui->le_hostaname->setText(QString::fromStdString(host));
+    ui->le_dbname->setText(QString::fromStdString(db));
+    ui->le_port->setText(QString::number(port));
 }
 
 DBSetDialog::~DBSetDialog()
