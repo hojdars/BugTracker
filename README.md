@@ -83,7 +83,7 @@ The MainWindow also handles all events that arise, handling things like clicking
 
 The main two features are viewing the bug, editing the bug and adding new bugs. This is handled in the methods (slots) ```tree_itemClicked_slot()``` and ```tree_itemDoubleClicked_slot()``` as well as ```add_new_item()``` which handles adding a new bug.
 
-##### Improving and adding features
+### Improving and adding features
 The main improvement that can be made to the application is adding the supprt for more enumerator columns. This should be very easy and the ground for this feature is prepared. There is a set for storing the information of which columns are enumerators in the DataObject class, and the two maps for converting values to IDs (in the relation DB) and back can be each made into a vector of maps. The method ```return_states_atIndex()``` is prepared which serves for returing all the states of a given enumerator's index which is needed **(and used by)** the ComboBoxes in ItemEditDialog. Reimplementing this method will make the ComboBoxes work properly. The only thing left to do is add the Database-side support (tables which indicate what columns are enumerators and the adequate enum tables) and changing the ```prepare_view_data()``` which loads the names of columns and the enumerator column to a state where all the enumerator columns are loaded.
 
 One more thing to improve would be some kind of DB data paging, to allow the program to download only smaller chunks of data drom the DB. Note that I have **not** prepared ground for this change and it might require a more solid ```load_query_intoMemory()``` method implementation as it now does something like ```SELECT * from main_table;``` and load it into memory split accordingly.
