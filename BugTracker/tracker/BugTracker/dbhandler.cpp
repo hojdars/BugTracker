@@ -14,6 +14,7 @@ DBHandler::DBHandler(std::vector<QString>& dbparams ,int port)
     hostname_ = dbparams[2];
     dbname_ = dbparams[3];
     port_ = port;
+
     database_ = QSqlDatabase::addDatabase("QPSQL");
 
 

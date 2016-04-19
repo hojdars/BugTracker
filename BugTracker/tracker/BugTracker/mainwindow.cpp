@@ -12,7 +12,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     connect(ui->tree_bugView,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),this,SLOT(tree_itemDoubleClicked_slot(QTreeWidgetItem*,int)));
     connect(ui->tree_bugView,SIGNAL(itemClicked(QTreeWidgetItem*,int)),this,SLOT(tree_itemClicked_slot(QTreeWidgetItem*,int)));
 
-    datab_inst_ = nullptr;
+    //datab_inst_ = nullptr;
 
     // Load config.ini
     bool ok_state = initialize_DB();
@@ -79,7 +79,12 @@ bool MainWindow::load_settings(std::vector<QString>& dbparams, int& port)
 void MainWindow::load_new_database()
 {
     // We clear the previous DB Handler, this connection is dead
-    datab_inst_ = nullptr;
+    if(datab_inst_ != nullptr)
+    {
+        datab_inst_->close();
+        datab_inst_ = nullptr;
+    }
+
     bool ok_state = initialize_DB();
     if(!ok_state)
     {
@@ -161,7 +166,7 @@ bool MainWindow::prepare_view_data()
     if(!success)
     {
         QMessageBox msg;
-        msg.setText(all_errors);
+        msg.setText(all_errors + datab_inst_->last_error());
         msg.exec();
     }
     return success;
@@ -195,7 +200,7 @@ void MainWindow::load_query_intoMemory(QString command)
     }
     else
     {
-        ui->statusBar->showMessage("Error executing query:\n" + query.lastError().text());
+        ui->statusBar->showMessage("Error executing query:\n" + datab_inst_->last_error());
     }
 }
 
@@ -316,11 +321,14 @@ QString MainWindow::sqlInsert_fromValues(QStringList values)
         }
     }
     sql_command += ") VALUES (";
-    for(auto& val_name : values)
+
+    for(auto it = values.begin(); it != values.end(); ++it)
     {
-        sql_command += "'" + val_name + "'";
-        if(val_name != values.last()) // HACK
+        sql_command += "'" + *it + "'";
+        if(it != (values.end()-1))
+        {
             sql_command += ", ";
+        }
     }
     sql_command += ");";
     return sql_command;
@@ -338,11 +346,19 @@ void MainWindow::add_new_item()
     edit_dialog.exec();
 
     if(edit_dialog.result() != QDialog::DialogCode::Accepted)
+    {
+        ui->statusBar->showMessage("Item adding canceled.");
         return;
+    }
 
     QStringList values = edit_dialog.return_strings(bug_data_->rev_state_names_,bug_data_->enum_cols);
     if(values.empty())
-        return; // invalid data set
+    {
+        QMessageBox msg;
+        msg.setText("Invalid data set, aborting the insert.");
+        msg.exec();
+        return;
+    }
 
 
     // INSERT command with 'values'
@@ -356,7 +372,9 @@ void MainWindow::add_new_item()
         ui->statusBar->showMessage("Insert successful.");
     else
     {
-        ui->statusBar->showMessage("Inserting failed.\n" + query.lastError().text());
+        QMessageBox msg;
+        msg.setText("Inserting failed.\n" + datab_inst_->last_error() + QString("\n") + query.lastError().text());
+        msg.exec();
         return;
     }
 
@@ -368,7 +386,7 @@ void MainWindow::add_new_item()
 }
 
 // Editing an existing item via double clicking
-std::vector<QString> MainWindow::edit_memoryItem(int item_position, int& code)
+std::vector<QString> MainWindow::edit_memoryItem(size_t item_position, int& code)
 {
     // if we are editing out of range, we don't edit
     if(item_position >= bug_data_->bug_values_.size())
@@ -414,6 +432,10 @@ std::vector<QString> MainWindow::edit_memoryItem(int item_position, int& code)
             bug_data_->bug_values_.at(item_position).at(i) = result.at(i-1);
         }
     }
+    else
+    {
+        code = 99;
+    }
 
     // we return the backed-up row, in case od Database failure
     return backup;
@@ -430,7 +452,7 @@ void MainWindow::tree_itemDoubleClicked_slot(QTreeWidgetItem *item, int column)
     else
     {
         QMessageBox msg;
-        msg.setText("Row is locked, please wait a few moments until someone else unlocks it.\n" + lock_transaction.lastError().text() );
+        msg.setText("Row is locked, please wait a few moments until someone else unlocks it.\n" + datab_inst_->last_error() );
         msg.exec();
         lock_transaction.exec("COMMIT;"); // end transaction
         return;
@@ -459,6 +481,17 @@ void MainWindow::tree_itemDoubleClicked_slot(QTreeWidgetItem *item, int column)
     {
         if(return_code == 2)
             ui->statusBar->showMessage("Invalid data set. Please set valid data.");
+        else if (return_code == 99)
+            ui->statusBar->showMessage("Item not updated.");
+
+        QSqlQuery end_transaction;
+        end_transaction.exec("ROLLBACK");
+
+        for(int i = 1; i < bug_data_->column_names_.size(); ++i)
+        {
+            bug_data_->bug_values_.at(item_position).at(i) = backup.at(i);
+        }
+        load_tree_fromMemory();
         return;
     }
 
@@ -489,11 +522,19 @@ void MainWindow::tree_itemDoubleClicked_slot(QTreeWidgetItem *item, int column)
     QSqlQuery update_querry;
     if(update_querry.exec(sqlCommand + "; COMMIT;"))
         ui->statusBar->showMessage("Database updated successfully.");
-    else
+    else // if the querry fails because user input the wrong data, we rollback, announce the error and return
     {
-        ui->statusBar->showMessage("Error updating item.\n" + update_querry.lastError().text() );
-        bug_data_->bug_values_.at(item_position) = backup;
-        lock_transaction.exec("COMMIT;");
+        QMessageBox msg;
+        msg.setText("Error updating item.\n" + datab_inst_->last_error() + QString("\n") + update_querry.lastError().text());
+        msg.exec();
+        lock_transaction.exec("ROLLBACK");
+
+        for(int i = 1; i < bug_data_->column_names_.size(); ++i)
+        {
+            bug_data_->bug_values_.at(item_position).at(i) = backup.at(i);
+        }
+        load_tree_fromMemory();
+        return;
     }
 }
 
