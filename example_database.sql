@@ -201,7 +201,7 @@ INSERT INTO columns ("ID", column_name) VALUES (8, 'Showdown');
 -- Name: foo_a_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('foo_a_seq', 25, true);
+SELECT pg_catalog.setval('foo_a_seq', 6, true);
 
 
 --

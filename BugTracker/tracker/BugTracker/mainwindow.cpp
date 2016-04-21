@@ -15,13 +15,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     //datab_inst_ = nullptr;
 
     // Load config.ini
-    bool ok_state = initialize_DB();
+  //  bool ok_state = initialize_DB();
 
-    if(ok_state)
-    {
+ //   if(ok_state)
+ //   {
         // Connect to the DB and do everything associated with it - erasing memory, loading new bugs, updating the TreeWidget
         load_new_database();
-    }
+   // }
 }
 
 bool MainWindow::initialize_DB()
@@ -59,9 +59,7 @@ bool MainWindow::load_settings(std::vector<QString>& dbparams, int& port)
 
     if(!ifs.is_open())
     {
-        QMessageBox msg;
-        msg.setText("Settings not found, using default.\nPlease set them in the 'Settings' menu.");
-        msg.exec();
+        return false;
     }
     else
     {
@@ -89,7 +87,7 @@ void MainWindow::load_new_database()
     if(!ok_state)
     {
         QMessageBox msg;
-        msg.setText("Settings not loaded correctly.\n Please fix any remaining issues before you can connect to the DB.");
+        msg.setText("Settings not loaded correctly.\nPlease fix any remaining issues in the 'Connection -> Database connection settings'\nmenu before you can connect to the DB.");
         msg.exec();
         return;
     }
