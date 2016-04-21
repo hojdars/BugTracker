@@ -166,7 +166,7 @@ bool MainWindow::prepare_view_data()
     if(!success)
     {
         QMessageBox msg;
-        msg.setText(all_errors + datab_inst_->last_error());
+        msg.setText(all_errors + datab_inst_->last_error() + qry.lastError().text());
         msg.exec();
     }
     return success;
@@ -452,7 +452,7 @@ void MainWindow::tree_itemDoubleClicked_slot(QTreeWidgetItem *item, int column)
     else
     {
         QMessageBox msg;
-        msg.setText("Row is locked, please wait a few moments until someone else unlocks it.\n" + datab_inst_->last_error() );
+        msg.setText("There is somebody else working on this bug right now.\nPlease try this again few moments later." + datab_inst_->last_error() );
         msg.exec();
         lock_transaction.exec("COMMIT;"); // end transaction
         return;
