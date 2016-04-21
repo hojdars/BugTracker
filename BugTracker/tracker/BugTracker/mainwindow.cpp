@@ -536,7 +536,10 @@ void MainWindow::tree_itemDoubleClicked_slot(QTreeWidgetItem *item, int column)
     // We run the update querry and COMMIT the transaction to REMOVE THE LOCK
     QSqlQuery update_querry;
     if(update_querry.exec(sqlCommand + "; COMMIT;"))
+    {
         ui->statusBar->showMessage("Database updated successfully.");
+        load_new_database();
+    }
     else // if the querry fails because user input the wrong data, we rollback, announce the error and return
     {
         QMessageBox msg;

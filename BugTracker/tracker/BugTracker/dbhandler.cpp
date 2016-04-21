@@ -2,6 +2,7 @@
 
 DBHandler::DBHandler()
 {
+    database_.removeDatabase("qt_sql_default_connection");
     database_ = QSqlDatabase::addDatabase("QPSQL");
 
     set_params("postgres","root","localhost","testdb",5432);
@@ -15,6 +16,7 @@ DBHandler::DBHandler(std::vector<QString>& dbparams ,int port)
     dbname_ = dbparams[3];
     port_ = port;
 
+    database_.removeDatabase("qt_sql_default_connection");
     database_ = QSqlDatabase::addDatabase("QPSQL");
 
 
@@ -37,7 +39,9 @@ void DBHandler::set_params(QString username, QString  password, QString  hostnam
 void DBHandler::close()
 {
     if(database_.isOpen())
+    {
         database_.close();
+    }
 }
 
 QString DBHandler::last_error()
@@ -49,7 +53,9 @@ QString DBHandler::last_error()
 QString DBHandler::DB_connect()
 {
     if(database_.isOpen())
+    {
         database_.close();
+    }
 
     database_.setHostName(hostname_);
     database_.setDatabaseName(dbname_);
