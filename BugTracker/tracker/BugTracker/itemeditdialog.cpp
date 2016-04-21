@@ -18,6 +18,8 @@ ItemEditDialog::ItemEditDialog(QWidget *parent, std::vector<QString> bug_values,
             // for implementing more enums, change the 1 to meaningfull
             widgets_.push_back(new my_ComboBox(this,bug_values[i],data_ptr->return_states_atIndex(1)));
         }
+        else if (data_ptr->column_names_.at(i) == "Description")
+            widgets_.push_back(new my_textEdit(bug_values[i],this));
         else
             widgets_.push_back(new my_lineEdit(bug_values[i],this));
     }

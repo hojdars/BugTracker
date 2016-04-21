@@ -2,6 +2,8 @@
 #define ITEMEDITDIALOG_HPP
 
 #include <QDialog>
+#include <QPlainTextEdit>
+#include <QTextEdit>
 #include <QLineEdit>
 #include <QComboBox>
 #include <memory>
@@ -48,6 +50,25 @@ public:
     }
 };
 
+class my_textEdit : public my_widget
+{
+private:
+    QPlainTextEdit * ptr_;
+public:
+    my_textEdit(QString text, QWidget * ui)
+    {
+        ptr_ = new QPlainTextEdit(text,ui);
+    }
+    virtual QWidget * get_ptr()
+    {
+        return ptr_;
+    }
+
+    virtual QString get_text()
+    {
+        return ptr_->toPlainText();
+    }
+};
 class my_lineEdit : public my_widget
 {
 private:
