@@ -176,8 +176,16 @@ bool MainWindow::prepare_view_data()
 void MainWindow::initialize_treewidget()
 {
     ui->tree_bugView->clear();
-    ui->tree_bugView->setColumnCount(bug_data_->column_names_.size());
-    ui->tree_bugView->setHeaderLabels(bug_data_->column_names_);
+    ui->tree_bugView->setColumnCount(bug_data_->column_names_.size()-1);
+
+    QStringList tmp;
+    for(auto& it: bug_data_->column_names_)
+    {
+        if(it != "Description")
+            tmp.push_back(it);
+    }
+
+    ui->tree_bugView->setHeaderLabels(tmp);
 }
 
 // Loading bugs into memory, adding up, not erasing beforehand!
@@ -218,17 +226,21 @@ void MainWindow::load_tree_fromMemory()
         QTreeWidgetItem * item = new QTreeWidgetItem(ui->tree_bugView);
 
         int col_counter = 0;
+        int col_iter = 0;
         for(auto& column_string : mem_item)
         {
+            if(bug_data_->column_names_.at(col_iter) != "Description")
+            {
+                auto is_enum = bug_data_->enum_cols.find(col_iter);
+                if(is_enum != bug_data_->enum_cols.end())
+                    item->setText(col_counter, bug_data_->state_names_[column_string.toInt()]);
+                else
+                    item->setText(col_counter,column_string);
 
-            auto is_enum = bug_data_->enum_cols.find(col_counter);
-            if(is_enum != bug_data_->enum_cols.end())
-                item->setText(col_counter, bug_data_->state_names_[column_string.toInt()]);
-            else
-                item->setText(col_counter,column_string);
-
-            item->setData( col_counter, 0x0100, QVariant::fromValue<int>(item_counter) );
-            col_counter++;
+                item->setData( col_counter, 0x0100, QVariant::fromValue<int>(item_counter) );
+                col_counter++;
+            }
+            col_iter++;
         }
         item_counter++;
     }
@@ -295,7 +307,10 @@ void MainWindow::tree_itemClicked_slot(QTreeWidgetItem *item, int column)
         // enumerator problems
         auto is_enum = bug_data_->enum_cols.find(i);
         if(is_enum == bug_data_->enum_cols.end())
-            text += "<b>" + bug_data_->column_names_.at(i) + "</b>:<br>" +field + "<br><br>";
+        {
+            QString tmp = field;
+            text += "<b>" + bug_data_->column_names_.at(i) + "</b>:<br>" +tmp.replace("\n","<br>") + "<br><br>";
+        }
         else
             text += "<b>" + bug_data_->column_names_.at(i) + "</b>:<br>" +bug_data_->state_names_.at(field.toInt()) + "<br><br>";
 
